@@ -1,0 +1,9 @@
+[package]
+name = "plonkish-relation"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description = "TBD"
+license.workspace = true
+
+[dependencies]
