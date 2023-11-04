@@ -3,7 +3,7 @@ name = "plonkish-relation"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-description = "TBD"
+description = "Specification of the PLONKish relation in hacspec"
 license.workspace = true
 
 [dependencies]

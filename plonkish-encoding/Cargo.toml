@@ -3,7 +3,7 @@ name = "plonkish-encoding"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-description = "TBD"
+description = "An encoding format for PLONKish arithmetic circuits"
 license.workspace = true
 
 [dependencies]
