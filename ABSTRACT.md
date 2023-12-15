@@ -8,7 +8,7 @@
 *Public Contact:*  jack@electriccoin.co, daira@jacaranda.org, mary.maller@ethereum.org
 
 ## Expected deliverables
-The working group will focus on the Plonkish arithmetisation used in the Halo2 proving system.  The initial deliverable will be split into two draft specifications:
+The working group will focus on the Plonkish arithmetisation used in the Halo 2 proving system.  The initial deliverable will be split into two draft specifications:
 - The Plonkish constraint system specification.
 - The optimised Plonkish constraint specification.
 
@@ -26,7 +26,7 @@ The supported constraints will include at least:
 
 The optimised Plonkish constraint system specification will detail:
 - The notion of a *layout*, an assignment of fixed, public, and private inputs within a matrix of field elements.
-- The notion of *used* constraints, that indicate which coordinates within the matrix are nontrivially used.
+- The notion of *used* matrix elements, that indicate which positions within the matrix are nontrivially used.
 - The fixed, public, and private inputs to the optimised Plonkish relation.
 - Support for rotation constraints, which leverage the relative positions of assigned matrix elements to reduce the size of the matrix and the number of equality constraints.
 - How to compile to the optimised constraint system.
@@ -37,9 +37,9 @@ Accompanying the specification will be an open-source reference implementation w
 The team will meet once every two weeks during 2024 and aims to have an initial draft specification by July 2024.
 
 ## Resources
-[The Halo2 Book](https://zcash.github.io/halo2/concepts/arithmetization.html)
-[UltraPlonk Arithmetisation](https://docs.zkproof.org/pages/standards/accepted-workshop3/proposal-turbo_plonk.pdf)
-[Plaf format](https://github.com/Dhole/polyexen/blob/master/plaf.md)
-[hax](https://github.com/hacspec/hax)
+- [The Halo2 Book](https://zcash.github.io/halo2/concepts/arithmetization.html)
+- [UltraPlonk Arithmetisation](https://docs.zkproof.org/pages/standards/accepted-workshop3/proposal-turbo_plonk.pdf)
+- [Plaf format](https://github.com/Dhole/polyexen/blob/master/plaf.md)
+- [hax](https://github.com/hacspec/hax)
 
 *Submitted on YYYY-Month-DD to the ZKProof Standards Committee.*
