@@ -9,6 +9,8 @@ resolver = "2"
 version = "0.0.0"
 authors = [
     "Jack Grigg <thestr4d@gmail.com>",
+    "Daira Emma Hopwood <daira@jacaranda.org>",
+    "Mary Maller <mary.maller@ethereum.org>",
 ]
 edition = "2021"
-license = "MIT OR Apache-2.0"
+license = "MIT OR Apache-2.0 OR CC-BY-4.0"
