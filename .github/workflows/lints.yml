@@ -1,0 +1,61 @@
+name: Lints
+
+# We only run these lints on trial-merges of PRs to reduce noise.
+on: pull_request
+
+jobs:
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Clippy check
+        uses: auguwu/clippy-action@1.2.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          all-features: true
+          deny: warnings
+
+  doc-links:
+    name: Intra-doc links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cargo fetch
+      # Requires #![deny(rustdoc::broken_intra_doc_links)] in crates.
+      - name: Check intra-doc links
+        run: cargo doc --workspace --all-features --document-private-items
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+  hacspec:
+    name: hacspec syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Install hax
+        run: nix profile install github:hacspec/hax
+
+      - name: Check syntax
+        run: cargo hax json
+        working-directory: ./plonkish-relation
+
+      - name: Check compilation to Coq
+        run: cargo hax into coq
+        working-directory: ./plonkish-relation
+
+      - name: Check compilation to Easycrypt
+        run: cargo hax into easycrypt
+        working-directory: ./plonkish-relation
+
+      - name: Check compilation to F*
+        run: cargo hax into fstar
+        working-directory: ./plonkish-relation

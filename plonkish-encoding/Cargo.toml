@@ -7,3 +7,6 @@ description = "An encoding format for PLONKish arithmetic circuits"
 license.workspace = true
 
 [dependencies]
+
+[dev-dependencies]
+plonkish-relation = { path = "../plonkish-relation" }
