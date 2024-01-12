@@ -9,9 +9,13 @@
 
 *Submitted on 2024-MM-DD to the ZKProof Standards Committee.*
 
+## Summary
+An arithmetisation is a language that a proof system uses to express statements. A circuit is a program in this language. The associated computation has been computed correctly if and only if all of the constraints in the circuit are satisified.
+
+The primary purpose of this ZKProof Working Group is to specify a particular arithmetisation: the "Plonkish" arithmetisation used in the Halo 2 proving system.
 
 ## Expected deliverables
-The working group will focus on the Plonkish arithmetisation used in the Halo 2 proving system.  The initial deliverable will be split into two draft specifications:
+The initial deliverable will be split into two draft specifications:
 - The Plonkish constraint system specification.
 - The optimised Plonkish constraint specification.
 
