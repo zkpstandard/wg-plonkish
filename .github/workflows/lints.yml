@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Clippy check
-        uses: auguwu/clippy-action@1.2.2
+        uses: auguwu/clippy-action@1.3.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           all-features: true
