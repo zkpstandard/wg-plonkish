@@ -2,7 +2,7 @@
 
 ## Contributors
 - Jack Grigg, Electric Coin Company
-- Daira Emma Hopwood, Jacaranda Software
+- Daira-Emma Hopwood, Jacaranda Software
 - Mary Maller, Ethereum Foundation and PQShield
 
 *Public Contact:* plonkish-team@googlegroups.com
