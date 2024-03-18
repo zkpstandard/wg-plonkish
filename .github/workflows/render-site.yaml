@@ -1,0 +1,64 @@
+# Reference: https://nathan-at-least.github.io/auto-deploy-howto.html
+name: Deploy Rendered Site
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  render-and-deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    # These initial steps set up the toolchain:
+    - name: Rust Toolchain Version Diagnostics
+      run: cargo --version --verbose && rustup --version
+      with:
+        tool: mdbook@0.4.37
+    - uses: taiki-e/cache-cargo-install-action@v1
+      with:
+        tool: mdbook-katex@0.6.0
+
+    # Now get the user content:
+    - uses: actions/checkout@v3
+
+    # Now render to the site:
+
+    # Each deploy overwrites the contents of `gh-pages` branch from
+    # `main`, but also introduces a merge structure so that the history of
+    # `gh-pages` is tracked:
+    - name: Overwrite gh-pages branch with main branch
+      run: |
+        set -x
+        BASE_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+        git config --global user.name 'autodeploy'
+        git config --global user.email 'autodeploy'
+        git fetch
+        git checkout gh-pages # ensure we have local branch
+        git checkout "$BASE_BRANCH"
+        TMP='local-temp-branch'
+        git checkout -b "$TMP" # Same tree state as main branch
+        git merge \
+          --strategy ours \
+          --commit \
+          -m 'Auto-deploy: overwriting with `main` branch' \
+          --allow-unrelated-histories \
+          gh-pages
+        git checkout gh-pages
+        git merge --ff-only "$TMP"
+        git branch -d "$TMP"
+    - run: mdbook build
+    - name: Rendered manifest
+      run: find ./docs -type f -exec ls -ld '{}' \;
+    - name: Disable jekyll
+      run: touch .nojekyll
+    - name: Commit and Push render to gh-pages
+      run: |
+        set -x
+        git add --all
+        git commit -m 'Auto-deploy: rendered output'
+        git push
