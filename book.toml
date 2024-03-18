@@ -21,4 +21,4 @@ renderer = ["html"]
 
 [output.html]
 default-theme = "light"
-additional-css = []
+additional-css = ["css/style.css"]

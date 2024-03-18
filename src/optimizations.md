@@ -89,17 +89,14 @@ $$
 $$
 That is, $\mathsf{ok\_up\_to}(t, \mathbf{r})$ means that the correctness criterion above holds for the subset $[0, t]$ of abstract rows.
 
-> set $\mathbf{r} := \{\}$
->
-> set $v := 0$
->
-> for $t$ from $0$ up to $n-1$:
->
-> $\hspace{2em}$ find the minimal $u \geq v$ such that $\mathsf{ok\_up\_to}(t, \mathbf{r} \cup \{t \mapsto u\})$
->
-> $\hspace{2em}$ set $\mathbf{r} := \mathbf{r} \cup \{t \mapsto u\}$ and $v := u+1$
->
-> let $n' = v$ be the number of concrete rows.
+| Algorithm for choosing $\mathbf{r}$ |
+|----|
+| set $\mathbf{r} := \{\}$ |
+| set $v := 0$ |
+| for $t$ from $0$ up to $n-1$: |
+| $\hspace{2em}$ find the minimal $u \geq v$ such that $\mathsf{ok\_up\_to}(t, \mathbf{r} \cup \{t \mapsto u\})$ |
+| $\hspace{2em}$ set $\mathbf{r} := \mathbf{r} \cup \{t \mapsto u\}$ and $v := u+1$ |
+| let $n' = v$ be the number of concrete rows. |
 
 This algorithm can be proven correct by induction on $n$. It is complete because for each step it is always possible to find a suitable $u$. That is, we can always choose $u$ large enough that any additional conditions $$
 \mathsf{used}(i, j) \;\wedge\; \mathsf{used}(k, \ell) \;\wedge\; (i, j) \not\equiv_A (k, \ell) \Rightarrow \mathbf{H}(i, \mathbf{r}(j)) \neq \mathbf{H}(k, \mathbf{r}(\ell))
