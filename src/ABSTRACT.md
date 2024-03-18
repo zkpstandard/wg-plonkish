@@ -1,4 +1,4 @@
-# Plonkish Constraint System Working Group
+# Abstract — Plonkish Constraint System Working Group
 
 ## Contributors
 - Jack Grigg, Electric Coin Company
@@ -19,7 +19,7 @@ The initial deliverable will be split into two draft specifications:
 - The Plonkish constraint system specification.
 - The optimised Plonkish constraint specification.
 
-The constraint system specifications will be agnostic to the underlying prime-order field.  The output is expected to be used as input to e.g., an Interactive Oracle Proof. 
+The constraint system specifications will be agnostic to the underlying prime-order field.  The output is expected to be used as input to e.g., an Interactive Oracle Proof.
 
 The Plonkish constraint system specification will detail:
 - The fixed, public, and private inputs (which are field elements) to the Plonkish relation.

@@ -1,0 +1,24 @@
+[book]
+authors = [
+    "Daira-Emma Hopwood",
+    "Mary Maller",
+    "Jack Grigg",
+]
+language = "en"
+multilingual = false
+src = "src"
+title = "Plonkish Constraint System Working Group"
+
+[build]
+# GitHub pages renders content under `docs/`; see https://nathan-at-least.github.io/auto-deploy-howto.html
+build-dir = "docs"
+
+[preprocessor.katex]
+macros = "src/macros.txt"
+renderer = ["html"]
+# Uncomment this if we need \href and \url links in KaTeX to work (which we currently don't).
+#trust = true
+
+[output.html]
+default-theme = "light"
+additional-css = ["css/style.css"]

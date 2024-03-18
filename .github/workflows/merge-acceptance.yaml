@@ -1,0 +1,18 @@
+name: 'Check Rendering'
+on: pull_request
+jobs:
+  check-render:
+    runs-on: 'ubuntu-latest'
+    steps:
+    - name: Rust Toolchain Version Diagnostics
+      run: cargo --version --verbose && rustup --version
+    - uses: taiki-e/cache-cargo-install-action@v1
+      with:
+        tool: mdbook@0.4.37
+    - uses: taiki-e/cache-cargo-install-action@v1
+      with:
+        tool: mdbook-katex@0.6.0
+    - uses: actions/checkout@v3
+    - run: mdbook build
+    - name: Check for Orphaned Files
+      run: ./util/find-orphaned-files.sh

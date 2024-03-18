@@ -17,6 +17,17 @@ for this standardization effort.
 The software and specifications in this repository are currently under
 development and have not been fully reviewed.
 
+## Rust prerequisites
+
+- `cargo install mdbook`
+- `cargo install mdbook-katex`
+
+## Rendering
+
+- `mdbook build`
+
+The rendered documents can be viewed at [docs/index.html](docs/index.html).
+
 ## License
 
 All files in this repository are licensed under any of:
