@@ -30,7 +30,7 @@ function main
 
 function parse-linked-files
 {
-  grep '(' | sed 's/^.*(//; s/)$//' | grep -v '^$' | sort
+  grep '(' | sed 's@^.*(@./@; s@)$@@' | grep -v '^$' | sort
 }
 
 function find-actual-files
