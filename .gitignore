@@ -4,3 +4,6 @@
 # Editor temporary files
 .*.swp
 *~
+
+# mdbook output
+/docs
