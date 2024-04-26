@@ -6,10 +6,10 @@ jobs:
     steps:
     - name: Rust Toolchain Version Diagnostics
       run: cargo --version --verbose && rustup --version
-    - uses: taiki-e/cache-cargo-install-action@v1
+    - uses: taiki-e/cache-cargo-install-action@v2
       with:
         tool: mdbook@0.4.37
-    - uses: taiki-e/cache-cargo-install-action@v1
+    - uses: taiki-e/cache-cargo-install-action@v2
       with:
         tool: mdbook-katex@0.6.0
     - uses: actions/checkout@v3

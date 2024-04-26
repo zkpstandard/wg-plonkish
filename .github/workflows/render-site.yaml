@@ -19,7 +19,7 @@ jobs:
       run: cargo --version --verbose && rustup --version
       with:
         tool: mdbook@0.4.37
-    - uses: taiki-e/cache-cargo-install-action@v1
+    - uses: taiki-e/cache-cargo-install-action@v2
       with:
         tool: mdbook-katex@0.6.0
 
