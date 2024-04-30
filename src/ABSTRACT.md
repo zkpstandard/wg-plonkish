@@ -1,13 +1,13 @@
-# Abstract — Plonkish Constraint System Working Group
+# Abstract â€” Plonkish Constraint System Working Group
 
 ## Contributors
 - Jack Grigg, Electric Coin Company
 - Daira-Emma Hopwood, Jacaranda Software
-- Mary Maller, Ethereum Foundation and PQShield
+- Mary Maller, Ethereum Foundation and PQShield (liason)
 
 *Public Contact:* plonkish-team@googlegroups.com
 
-*Submitted on 2024-MM-DD to the ZKProof Standards Committee.*
+*Submitted on 2024-04-30 to the ZKProof Standards Committee.*
 
 ## Summary
 An arithmetisation is a language that a proof system uses to express statements. A circuit is a program in this language. The associated computation has been computed correctly if and only if all of the constraints in the circuit are satisified.
