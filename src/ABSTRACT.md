@@ -1,4 +1,4 @@
-# Abstract â€” Plonkish Constraint System Working Group
+# Abstract: Plonkish Constraint System Working Group
 
 ## Contributors
 - Jack Grigg, Electric Coin Company
