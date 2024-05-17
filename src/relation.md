@@ -77,8 +77,8 @@ Copy constraints that enforce that advice entries must be equal to other inputs.
 
 | Copy Constraints  | Description |
 | ----------------- | -------- |
-| $((i,j),k) \in S_I \Rightarrow w[i, j] = \phi[k]$ | The $k$th instance entry is equal to the $(i,j)$th advice entry for all $((i,j),k) \in S_I$. |
-| $((i,j),(k,\ell)) \in S_F \Rightarrow w[i, j] = f[k, \ell]$ | The $(k, \ell)$th fixed entry is equal to the $(i,j)$th advice entry for all $((i,j),(k,\ell)) \in S_F$. |
+| $((i,j),k) \in S_I \Rightarrow w[i, j] = \phi[k]$ | The $k$ th instance entry is equal to the $(i,j)$ th advice entry for all $((i,j),k) \in S_I$. |
+| $((i,j),(k,\ell)) \in S_F \Rightarrow w[i, j] = f[k, \ell]$ | The $(k, \ell)$ th fixed entry is equal to the $(i,j)$ th advice entry for all $((i,j),(k,\ell)) \in S_F$. |
 | $(i,j) \equiv_A (k,\ell) \Rightarrow w[i, j] = w[k, \ell]$ | $\equiv_A$ is an equivalence relation indicating which advice entries are constrained to be equal. |
 
 #### Custom constraints
