@@ -14,15 +14,26 @@ TODO: define variables, and make this consistent with changes to [the relation](
 
 Below we will use the convention that variables marked with a prime ($'$) refer to *concrete* column or row indices.
 
-We say that an advice cell with coordinates $(i, j)$ is "used" if it appears in some nontrivial copy constraint or custom constraint, i.e. $\mathsf{used}(i, j)$ is true iff any of the following hold:
+We say that an advice cell with coordinates $(i, j)$ "might be used" if it appears in some nontrivial copy constraint or custom constraint, i.e. $\mathsf{used}(i, j)$ is true iff any of the following hold:
 $$
 \begin{array}{rcl}
 \exists (k, \ell) \neq (i, j) &:& (i, j) \equiv_A (k, \ell) \\
-\exists k, \ell &:& (i, j, k, \ell) \in S_I \\
-\exists k, \ell &:& (i, j, k, \ell) \in S_F \\
-\exists u &:& j \in \mathsf{CUS}_u \text{ and the } w[i, \_] \text{ argument to } p_u \text{ is used nontrivially}.
+\exists k &:& ((i, j), k) \in S_I \\
+\exists (k, \ell) &:& ((i, j), (k, \ell)) \in S_F \\
+\exists u &:& j \in \mathsf{CUS}_u \text{ and } w[i, j] \text{ ``might be used'' in } p_u(\mathsf{ROW}_j),
 \end{array}
 $$
+
+where
+$$p_u(\mathsf{ROW}_j) = \sum_{z=0}^{\nu-1} \left( c_z \cdot \prod_{b=0}^{m_F-1} f[b, j]^{\alpha_{z,b}} \cdot \prod_{b'=0}^{m_A-1} w[b', j]^{\alpha_{z,m_F+b'}} \right).$$
+
+<!---
+TODO: Move p_u definition into relation.md if we need it for specifying the encoding (which will need to access c_z etc).
+-->
+
+$w[i, j]$ "might be used" in $p_u(\mathsf{ROW}_j)$ iff $\exists z \in [0, \nu)$ s.t. $\alpha_{z,m_F+i} > 0$.
+
+----
 
 $w$ represents $m_A$ _abstract_ columns, that do not directly correspond 1:1 to actual columns in the compiled circuit (but may do so if the backend chooses).
 
