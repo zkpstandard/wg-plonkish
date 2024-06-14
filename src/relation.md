@@ -95,6 +95,8 @@ Copy constraints enforce that entries in the witness matrix are equal to each ot
 | $((i,j),k) \in S \Rightarrow w[i, j] = \phi[k]$ | The $(i,j)$ th advice entry is equal to the $k$ th instance entry for all $((i,j),k) \in S$. |
 | $(i,j) \equiv (k,\ell) \Rightarrow w[i, j] = w[k, \ell]$ | $\equiv$ is an equivalence relation indicating which witness entries are constrained to be equal. |
 
+By convention, when fixed abstract cells have the same value, we consider them to be equivalent under $\equiv$. That is, $i < m_f \;\wedge\; k < m_f \;\wedge\; f[i, j] = f[k, \ell] \Rightarrow (i, j) \equiv (k, \ell)$. This has no direct effect on the relation, but it will simplify expressing an [optimization](optimizations.md).
+
 #### Custom constraints
 
 Plonkish also allows custom constraints between the witness matrix entries. In the abstract model we are defining, a custom constraint applies only within a single row of the witness matrix, for the rows that are selected for that constraint.
