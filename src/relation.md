@@ -60,17 +60,15 @@ Define $\vec{w}_j$ as the row vector $[w[i, j] : i \leftarrow 0 \text{..} m]$.
 
 ### Definition of the relation
 
-Given the above definitions, the relation $\mathcal{R}_{\mathsf{plonkish}}$ is given by:
-
+Given the above definitions, the relation $\mathcal{R}_{\mathsf{plonkish}}$ is given by $\{ (x = (\mathbb{F}, t, \phi, n, m, \equiv, S, m_f, f, \{\mathsf{CUS}_{u}, p_u\}_u, \{ L_v, \mathsf{LOOK}_v, \{ q_{v,s} \}_s, \mathsf{TAB}_v \}_v), w) \}$ such that:
 $$
-\left\{ \begin{array}{cc | c}
-   (\mathbb{F}, t, \phi, n, m, \equiv, S, m_f, f, \{\mathsf{CUS}_{u}, p_u\}_u, \{ L_v, \mathsf{LOOK}_v, \{ q_{v,s} \}_s, \mathsf{TAB}_v \}), & & - \\
-   w \mathrel{⦂} \mathbb{F}^{m \times n}, \ f \mathrel{⦂} \mathbb{F}^{m_f \times n} & & i \in [0,m_f), \ j \in [0,n) \Rightarrow w[i, j] = f[i, j] \\
-   S \subseteq ([0,m) \times [0,n)) \times [0,t), \ \phi \mathrel{⦂} \mathbb{F}^t & & ((i,j),k) \in S \Rightarrow w[i, j] = \phi[k] \\
-   \equiv\; \subseteq ([0,m) \times [0,n)) \times ([0,m) \times [0,n)) & & (i,j) \equiv (k,\ell) \Rightarrow w[i, j] = w[k, \ell] \\
-   \mathsf{CUS}_u \subseteq [0,n), \ p_u \mathrel{⦂} \mathbb{F}^m \mapsto \mathbb{F} & & j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0 \\
+\begin{array}{ll|l}
+   w \mathrel{⦂} \mathbb{F}^{m \times n}, \ f \mathrel{⦂} \mathbb{F}^{m_f \times n} & & i \in [0,m_f), \ j \in [0,n) \Rightarrow w[i, j] = f[i, j] \\[0.3ex]
+   S \subseteq ([0,m) \times [0,n)) \times [0,t), \ \phi \mathrel{⦂} \mathbb{F}^t & & ((i,j),k) \in S \Rightarrow w[i, j] = \phi[k] \\[0.3ex]
+   \equiv\; \subseteq ([0,m) \times [0,n)) \times ([0,m) \times [0,n)) & & (i,j) \equiv (k,\ell) \Rightarrow w[i, j] = w[k, \ell] \\[0.3ex]
+   \mathsf{CUS}_u \subseteq [0,n), \ p_u \mathrel{⦂} \mathbb{F}^m \mapsto \mathbb{F} & & j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0 \\[0.3ex]
    \mathsf{LOOK}_v \subseteq [0,n), \ q_{v,s} \mathrel{⦂} \mathbb{F}^m \mapsto \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j \in \mathsf{LOOK}_v \Rightarrow [q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v] \in \mathsf{TAB}_v
-\end{array} \right\}
+\end{array}
 $$
 
 ### Conditions satisfied by statements in $\mathcal{R}_{\mathsf{plonkish}}$
