@@ -38,13 +38,13 @@ Cell $w[i, j]$ "might be used" in $P(\vec{w}_j)$ iff $\exists z \in [0, \nu)$ s.
 
 $w$ represents $m$ _abstract_ columns, that do not directly correspond 1:1 to actual columns in the compiled circuit (but may do so if the backend chooses).
 
-Offsets are represented by hints $\{ (h_i, e_i) \mathrel{⦂} [0,m') \times \mathbb{Z} \}_i$ where $m'$ is the number of concrete columns. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
+Offsets are represented by hints $\big[\, (h_i, e_i) \mathrel{⦂} [0,m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$ where $m'$ is the number of concrete columns. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
 
 > TODO: should we only allow nonnegative $e_i$? That would simplify the correctness condition below.
 
 Tesselation between custom constraints is just represented by equivalence under $\equiv$. When the offset hints indicate that two concrete cells in the same column are equivalent, the backend can optimise overall circuit area by reordering the rows so that the equivalent cells overlap.
 
-More specifically, to compile the abstract circuit to a concrete circuit using the hints $\{ (h_i, e_i) \}_i$, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, $\mathbf{r} : [0, n) \mapsto [0, n')$ with $n' \geq n$, such that the abstract cell with coordinates $(i, j)$ maps to the concrete cell with coordinates $(h_i, \mathbf{r}(j) + e_i)$, where:
+More specifically, to compile the abstract circuit to a concrete circuit using the hints $\big[\, (h_i, e_i) \,\big]_i$, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, $\mathbf{r} : [0, n) \mapsto [0, n')$ with $n' \geq n$, such that the abstract cell with coordinates $(i, j)$ maps to the concrete cell with coordinates $(h_i, \mathbf{r}(j) + e_i)$, where:
 * all *constrained* abstract cells map to concrete cell coordinates that are in range;
 * every *constrained* abstract cell is represented by a distinct concrete cell, except that abstract cells that are equivalent under $\equiv$ *may* be identified.
 
@@ -83,14 +83,14 @@ The abstract coordinates appearing in $\equiv$ and $S$ are similarly mapped to t
 
 The conditions for custom gates in the concrete circuit are then given by:
 $$
-\mathsf{CUS}'_u = \{ \mathbf{r}(j) : j \in \mathsf{CUS}_u \} \\
-j' \in \mathsf{CUS}'_u \Rightarrow p_u\left([w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m]\right) = 0
+\mathsf{CUS}'_u = \big\{\, \mathbf{r}(j) : j \in \mathsf{CUS}_u \,\big\} \\[0.6ex]
+j' \in \mathsf{CUS}'_u \Rightarrow p_u\!\left(\big[\, w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m \,\big]\right) = 0
 $$
 
 and similarly for lookups:
 $$
-\mathsf{LOOK}'_v = \{ \mathbf{r}(j) : j \in \mathsf{LOOK}_v \} \\
-j' \in \mathsf{LOOK}'_v \Rightarrow [q_{v,s}\left([w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m]\right) : s \leftarrow 0 \text{..} L_v] \in \mathsf{TAB}_v
+\mathsf{LOOK}'_v = \big\{\, \mathbf{r}(j) : j \in \mathsf{LOOK}_v \,\big\} \\[0.6ex]
+j' \in \mathsf{LOOK}'_v \Rightarrow \big[\, q_{v,s}\!\left(\big[\,w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m \,\big]\right) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
 $$
 
 ### Greedy algorithm for choosing $\mathbf{r}$
@@ -105,7 +105,7 @@ There is a greedy algorithm for deterministically choosing $\mathbf{r}$ that mai
 | $\hspace{2em}$ find the minimal $g' \geq a'$ such that $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\})$ |
 | $\hspace{2em}$ set $\mathbf{r} := \mathbf{r} \cup \{g \mapsto g'\}$ and $a' := g'+1$ |
 
-The number of concrete rows is then given by $n' = \max \{ \mathbf{r}(j) + e_i : (i, j) \in ([0, m) \times [0, n)) \;\wedge\; \mathsf{constrained}(i, j) \} + 1$.
+The number of concrete rows is then given by $n' = \max \big\{\, \mathbf{r}(j) + e_i : (i, j) \in ([0, m) \times [0, n)) \;\wedge\; \mathsf{constrained}(i, j) \,\big\} + 1$.
 
 This algorithm is correct because in the last step it finds $\mathbf{r}$ such that $\mathsf{ok\_for}([0, n), \mathbf{r})$, which is the correctness condition above.
 
