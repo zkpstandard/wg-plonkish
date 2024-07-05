@@ -2,11 +2,13 @@
 
 ## Background
 
-The relation described in [Specification of the Plonkish Relation](relation.md) gives an abstract model of a Plonkish constraint system that is sufficiently expressive, but does not take into account some of the optimizations that are commonly used in Plonkish implementations, such as the use of offsets/rotations in Plonkish custom gates. The trade-off here is that the abstract model allows rows to be arbitrarily reordered.
+The relation described in [Specification of the Plonkish Relation](relation.md) gives an abstract model of a Plonkish constraint system that is sufficiently expressive, but does not take into account some of the optimizations that are commonly used in Plonkish implementations, such as the use of offsets/rotations in Plonkish custom constraints.
 
-> It would have been possible to directly include offsets in the constraint system model, but the most obvious ways of doing this would require the circuit programmer to think about copy constraints that don't naturally arise from the intended circuit definition.
->
-> By separating the abstract constraint system from the concrete circuit, the programmer can instead locally add only the copy constraints that they know are needed. They are not forced to add artificial copy constraints corresponding to offsets. Although we still number the rows of the abstract witness matrix for convenience in the model, it would be sufficient to use any set with $n$ unique, not necessarily ordered elements. The abstract $\rightarrow$ concrete compilation can then reorder the rows as needed without changing the meaning of the circuit. This allows layout optimizations that would be impractical or error-prone to do manually, because they rely on global rather than local knowledge (such as which neighbouring cells are used or free, which can depend on gates that are logically unrelated).
+The benefit of the simpler abstract model is that it allows reasoning about the circuit without needing to be concerned with layout of the witness matrix, i.e. the position of rows relative to each other. The drawback of using only the abstract model, is that it may require a greater number of columns to express a given circuit than a model that supports offsets. This directly affects proof size for popular instantiations of proof systems based on Plonkish.
+
+In this document we specify a method to translate from an abstract circuit to a concrete one, that retains the zero-knowledge, (knowledge) soundness, and completeness of the abstract system. This can include automated optimizations, which are able to reorder the rows as needed without changing the meaning of the circuit.
+
+The optimizations suggested in this specification would be impractical or error-prone to do manually, because they rely on global optimization of the witness matrix layout. [TODO: make this more convincing or give examples.]
 
 ## Preliminary definitions
 
@@ -14,7 +16,7 @@ If not otherwise defined, variable names used here are consistent with [the rela
 
 We will use the convention that variables marked with a prime ($'$) refer to *concrete* column or row indices.
 
-An "abstract cell" or "concrete cell" specifies an entry in the witness matrix $w$ of the abstract circuit, or the witness matrix $w'$ of the concrete circuit, respectively.
+An "abstract cell" specifies an entry in the witness matrix $w$ of the abstract circuit. A "concrete cell" specifies an entry in the witness matrix $w'$ of the concrete circuit.
 
 We say that an abstract cell with coordinates $(i, j)$ is "constrained" if it is in a fixed column or if it appears in some copy, custom, or lookup constraint. More precisely, $\mathsf{constrained}(i, j)$ is true iff any of the following hold:
 $$
@@ -34,17 +36,40 @@ Here $p_u, \ q_{v,s} \mathrel{⦂} \mathbb{F}^m \mapsto \mathbb{F}$ are each [mu
 
 Cell $w[i, j]$ "might be used" in $P(\vec{w}_j)$ iff $\exists z \in [0, \nu)$ s.t. $\alpha_{z,i} > 0$.
 
-## Compiling to a concrete circuit
+## Correctness-preserving translation of circuits
 
-$w$ represents $m$ _abstract_ columns, that do not directly correspond 1:1 to actual columns in the compiled circuit (but may do so if the backend chooses).
+What we mean by a correctness-preserving translation is that we know an efficient translation function from abstract circuits to concrete circuits, such that for any given translation:
+  * There is a bijective map $\mathcal{I}$, efficiently computable in both directions, between abstract instances and concrete instances.
+  * There an efficient witness translation function $\mathcal{F}$ from abstract witnesses to concrete witnesses.
+  * Completeness is preserved: given a satisfying instance $x$ and witness $w$ for the abstract circuit, $w' = \mathcal{F}(w)$ is a satisfying witness for the concrete circuit with instance $\mathcal{I}(x)$.
+  * Knowledge soundness is preserved: given a satisfying instance $x$ and witness $w'$ for the concrete circuit, we can efficiently compute some satisfying witness $w$ for the abstract circuit with instance $\mathcal{I}^{-1}(x)$.
+
+We also claim that a correctness-preserving translation in this sense, when used with concrete proof system that is zero-knowledge, necessarily yields an overall proof system for the abstract relation that is zero-knowledge. That is, informally, no additional information about the abstract witness is revealed beyond the fact that the prover knows such a witness.
+
+## A model for a class of abstract-to-concrete translations and their correctness
+
+We give a specific model for a family of translations, and a criterion for them to be correctness-preserving consistent with the above definition. Note that this is very far from covering all possible correctness-preserving translations.
+
+In our model, a translation from an abstract to a concrete circuit will take inputs of the following form:
+
+| Translation input  | Description |
+| ------------------ | -------- |
+| input circuit      | This is the instance excluding the instance vector $\phi$. |
+| offset hints       | $\big[\, (h_i, e_i) \mathrel{⦂} [0,m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$ provided by the circuit designer. |
+
+| Translation output | Description |
+| ------------------ | -------- |
+| output circuit     | We don't have a definition of this yet. It is like the input circuit but also supports applying the polynomials to cells on offset rows. |
+
+The abstract witness matrix $w$ consists of $m$ abstract columns.
 
 Offsets are represented by hints $\big[\, (h_i, e_i) \mathrel{⦂} [0,m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$ where $m'$ is the number of concrete columns. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
 
 > TODO: should we only allow nonnegative $e_i$? That would simplify the correctness condition below.
 
-Tesselation between custom constraints is just represented by equivalence under $\equiv$. When the offset hints indicate that two concrete cells in the same column are equivalent, the backend can optimise overall circuit area by reordering the rows so that the equivalent cells overlap.
+Tesselation between custom constraints is just represented by equivalence under $\equiv$. When the offset hints indicate that two concrete cells in the same column are equivalent, the backend can optimize overall circuit area by reordering the rows so that the equivalent cells overlap.
 
-More specifically, to compile the abstract circuit to a concrete circuit using the hints $\big[\, (h_i, e_i) \,\big]_i$, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, $\mathbf{r} : [0, n) \mapsto [0, n')$ with $n' \geq n$, such that the abstract cell with coordinates $(i, j)$ maps to the concrete cell with coordinates $(h_i, \mathbf{r}(j) + e_i)$, where:
+More specifically, to translate the abstract circuit to a concrete circuit using the hints $\big[\, (h_i, e_i) \,\big]_i$, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, $\mathbf{r} : [0, n) \mapsto [0, n')$ with $n' \geq n$, such that the abstract cell with coordinates $(i, j)$ maps to the concrete cell with coordinates $(h_i, \mathbf{r}(j) + e_i)$, where:
 * all *constrained* abstract cells map to concrete cell coordinates that are in range;
 * every *constrained* abstract cell is represented by a distinct concrete cell, except that abstract cells that are equivalent under $\equiv$ *may* be identified.
 
@@ -57,13 +82,19 @@ $$
 \end{array}
 $$
 
-Then, $\mathbf{r}$ must be chosen such that $\mathsf{ok\_for}([0, n), \mathbf{r})$.
+Then, the overall correctness condition is that $\mathbf{r}$ must be chosen such that $\mathsf{ok\_for}([0, n), \mathbf{r})$. We claim that this implies the more general definition of correctness preservation for this family of translations.
 
-> It is alright if one or more *unconstrained* abstract cells map to the same concrete cell as a constrained abstract cell, because that will not affect the meaning of the circuit. Notice that specifying $\equiv$ as an equivalence relation helps to simplify this definition (as compared to specifying it as a set of copy constraints), because an equivalence relation is by definition symmetric, reflexive, and transitive.
+> Proof sketch [TODO remove handwaving]:
 >
-> Recall from the [relation definition](relation.md#copy-constraints) that fixed abstract cells with the same value are considered to be equivalent under $\equiv$. This allows a fixed column to be specified as a rotation of another fixed column, which can be useful to reduce the number of fixed concrete columns used by the concrete circuit.
+> $\mathcal{I}$ is the identity function and $\mathcal{F}$ is described below. $\mathcal{F}$, $\mathcal{I}$, and $\mathcal{I}^{-1}$ are obviously efficiently computable. Given that the concrete custom constraints and lookups are just the abstract constraints and lookups modified to access the same witness values in their translated locations, preservation of completeness preservation follows immediately. Preservation of knowledge soundness holds because, informally, we can invert the coordinate translation defined by $\mathcal{F}$ to reconstruct all of the abstract witness cells that are needed to satisfy the abstract relation.
+
+Discussion: It is alright if one or more *unconstrained* abstract cells map to the same concrete cell as a constrained abstract cell, because that will not affect the meaning of the circuit. Notice that specifying $\equiv$ as an equivalence relation helps to simplify this definition (as compared to specifying it as a set of copy constraints), because an equivalence relation is by definition symmetric, reflexive, and transitive.
+
+Recall from the [relation definition](relation.md#copy-constraints) that fixed abstract cells with the same value are considered to be equivalent under $\equiv$. This allows a fixed column to be specified as a rotation of another fixed column, which can be useful to reduce the number of fixed concrete columns used by the concrete circuit.
 
 Since correctness does not depend on the specific hints provided by the circuit programmer, it is also valid to use any subset of the provided hints, or to infer hints that were not provided.
+
+### Witness translations
 
 The constrained abstract cells $w : \mathbb{F}^{m \times n}$ are translated to concrete cells $w' : \mathbb{F}^{m' \times n'}$:
 $$
@@ -77,11 +108,13 @@ $$
 f'[h_i, \mathbf{r}(j) + e_i] = f[i, j]
 $$
 
-Fixed concrete cells not assigned values by this mapping are filled with zeros.
+Fixed concrete cells not assigned values by this translation are filled with zeros.
 
 The abstract coordinates appearing in $\equiv$ and $S$ are similarly mapped to their concrete coordinates.
 
-The conditions for custom gates in the concrete circuit are then given by:
+### Constraint translations
+
+The conditions for custom constraints in the concrete circuit are then given by:
 $$
 \mathsf{CUS}'_u = \big\{\, \mathbf{r}(j) : j \in \mathsf{CUS}_u \,\big\} \\[0.6ex]
 j' \in \mathsf{CUS}'_u \Rightarrow p_u\!\left(\big[\, w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m \,\big]\right) = 0
