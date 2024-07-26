@@ -40,17 +40,17 @@ Cell $w[i, j]$ "might be used" in $P(\vec{w}_j)$ iff $\exists z \in [0, \nu)$ s.
 
 What we mean by a correctness-preserving translation is that we know an efficient translation function from abstract circuits to concrete circuits, such that for any given translation:
   * There is a bijective map $\mathcal{I}$, efficiently computable in both directions, between abstract instances and concrete instances.
-  * There an efficient witness translation function $\mathcal{F}$ from abstract witnesses to concrete witnesses.
+  * There is an efficient witness translation function $\mathcal{F}$ from abstract witnesses to concrete witnesses.
   * Completeness is preserved: given a satisfying instance $x$ and witness $w$ for the abstract circuit, $w' = \mathcal{F}(w)$ is a satisfying witness for the concrete circuit with instance $\mathcal{I}(x)$.
-  * Knowledge soundness is preserved: given a satisfying instance $x$ and witness $w'$ for the concrete circuit, we can efficiently compute some satisfying witness $w$ for the abstract circuit with instance $\mathcal{I}^{-1}(x)$.
+  * Knowledge soundness is preserved: given a satisfying instance $x'$ and witness $w'$ for the concrete circuit, we can efficiently compute some satisfying witness $w$ for the abstract circuit with instance $\mathcal{I}^{-1}(x')$.
 
-We also claim that a correctness-preserving translation in this sense, when used with concrete proof system that is zero-knowledge, necessarily yields an overall proof system for the abstract relation that is zero-knowledge. That is, informally, no additional information about the abstract witness is revealed beyond the fact that the prover knows such a witness.
+We also claim that a correctness-preserving translation in this sense, when used with a concrete proof system that is zero-knowledge, necessarily yields an overall proof system for the abstract relation that is zero-knowledge. That is, informally, no additional information about the abstract witness is revealed beyond the fact that the prover knows such a witness.
 
 ## A model for a class of abstract-to-concrete translations and their correctness
 
 We give a specific model for a family of translations, and a criterion for them to be correctness-preserving consistent with the above definition. Note that this is very far from covering all possible correctness-preserving translations.
 
-In our model, a translation from an abstract to a concrete circuit will take inputs of the following form:
+In our model, the abstract witness matrix $w$ consists of $m$ abstract columns, and the concrete witness matrix $w'$ consists of $m'$ concrete columns. A translation from an abstract to a concrete circuit will take inputs of the following form:
 
 | Translation input  | Description |
 | ------------------ | -------- |
@@ -59,11 +59,9 @@ In our model, a translation from an abstract to a concrete circuit will take inp
 
 | Translation output | Description |
 | ------------------ | -------- |
-| output circuit     | We don't have a definition of this yet. It is like the input circuit but also supports applying the polynomials to cells on offset rows. |
+| output circuit     | TODO: We don't have a definition of this yet. It is like the input circuit but also supports applying the polynomials to cells on offset rows. |
 
-The abstract witness matrix $w$ consists of $m$ abstract columns.
-
-Offsets are represented by hints $\big[\, (h_i, e_i) \mathrel{⦂} [0,m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$ where $m'$ is the number of concrete columns. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
+Offsets are represented by hints $\big[\, (h_i, e_i) \,\big]$. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
 
 > TODO: should we only allow nonnegative $e_i$? That would simplify the correctness condition below.
 
@@ -86,7 +84,7 @@ Then, the overall correctness condition is that $\mathbf{r}$ must be chosen such
 
 > Proof sketch [TODO remove handwaving]:
 >
-> $\mathcal{I}$ is the identity function and $\mathcal{F}$ is described below. $\mathcal{F}$, $\mathcal{I}$, and $\mathcal{I}^{-1}$ are obviously efficiently computable. Given that the concrete custom constraints and lookups are just the abstract constraints and lookups modified to access the same witness values in their translated locations, preservation of completeness preservation follows immediately. Preservation of knowledge soundness holds because, informally, we can invert the coordinate translation defined by $\mathcal{F}$ to reconstruct all of the abstract witness cells that are needed to satisfy the abstract relation.
+> $\mathcal{I}$ is the identity function and $\mathcal{F}$ is described below. $\mathcal{F}$, $\mathcal{I}$, and $\mathcal{I}^{-1}$ are obviously efficiently computable. Given that the concrete custom constraints and lookups are just the abstract constraints and lookups modified to access the same witness values in their translated locations, preservation of completeness follows immediately. Preservation of knowledge soundness holds because, informally, we can invert the coordinate translation defined by $\mathcal{F}$ to reconstruct all of the abstract witness cells that are needed to satisfy the abstract relation.
 
 Discussion: It is alright if one or more *unconstrained* abstract cells map to the same concrete cell as a constrained abstract cell, because that will not affect the meaning of the circuit. Notice that specifying $\equiv$ as an equivalence relation helps to simplify this definition (as compared to specifying it as a set of copy constraints), because an equivalence relation is by definition symmetric, reflexive, and transitive.
 
