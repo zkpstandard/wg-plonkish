@@ -67,7 +67,7 @@ Offsets are represented by hints $\big[\, (h_i, e_i) \,\big]$. To simplify the p
 
 Tesselation between custom constraints is just represented by equivalence under $\equiv$. When the offset hints indicate that two concrete cells in the same column are equivalent, the backend can optimize overall circuit area by reordering the rows so that the equivalent cells overlap.
 
-More specifically, to translate the abstract circuit to a concrete circuit using the hints $\big[\, (h_i, e_i) \,\big]_i$, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, $\mathbf{r} : [0, n) \rightarrow [0, n')$ with $n' \geq n$, such that the abstract cell with coordinates $(i, j)$ maps to the concrete cell with coordinates $(h_i, \mathbf{r}(j) + e_i)$, where:
+More specifically, to translate the abstract circuit to a concrete circuit using the hints $\big[\, (h_i, e_i) \,\big]_i$, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, $\mathbf{r} \mathrel{⦂} [0, n) \rightarrow [0, n')$ with $n' \geq n$, such that the abstract cell with coordinates $(i, j)$ maps to the concrete cell with coordinates $(h_i, \mathbf{r}(j) + e_i)$, where:
 * all *constrained* abstract cells map to concrete cell coordinates that are in range;
 * every *constrained* abstract cell is represented by a distinct concrete cell, except that abstract cells that are equivalent under $\equiv$ *may* be identified.
 
@@ -94,14 +94,14 @@ Since correctness does not depend on the specific hints provided by the circuit 
 
 ### Witness translations
 
-The constrained abstract cells $w : \mathbb{F}^{m \times n}$ are translated to concrete cells $w' : \mathbb{F}^{m' \times n'}$:
+The constrained abstract cells $w \mathrel{⦂} \mathbb{F}^{m \times n}$ are translated to concrete cells $w' \mathrel{⦂} \mathbb{F}^{m' \times n'}$:
 $$
 \mathsf{constrained}(i, j) \Rightarrow w'[h_i, \mathbf{r}(j) + e_i] = w[i, j]
 $$
 
 The values of concrete cells not corresponding to any constrained abstract cell are arbitrary.
 
-The fixed abstract cells $f : \mathbb{F}^{m_f \times n}$ are similarly translated to fixed concrete cells $f' : \mathbb{F}^{m_f \times n'}$:
+The fixed abstract cells $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$ are similarly translated to fixed concrete cells $f' \mathrel{⦂} \mathbb{F}^{m_f \times n'}$:
 $$
 f'[h_i, \mathbf{r}(j) + e_i] = f[i, j]
 $$
