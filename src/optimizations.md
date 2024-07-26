@@ -50,7 +50,7 @@ We also claim that a correctness-preserving translation in this sense, when used
 
 We give a specific model for a family of translations, and a criterion for them to be correctness-preserving consistent with the above definition. Note that this is very far from covering all possible correctness-preserving translations.
 
-In our model, the abstract witness matrix $w$ consists of $m$ abstract columns, and the concrete witness matrix $w'$ consists of $m'$ concrete columns. A translation from an abstract to a concrete circuit will take inputs of the following form:
+In our model, the abstract witness matrix $w$ consists of $m$ abstract columns, and the concrete witness matrix $w'$ consists of $m'$ concrete columns, of which the first $m'_f$ are fixed. A translation from an abstract to a concrete circuit will take inputs of the following form:
 
 | Translation input  | Description |
 | ------------------ | -------- |
@@ -62,6 +62,8 @@ In our model, the abstract witness matrix $w$ consists of $m$ abstract columns, 
 | output circuit     | TODO: We don't have a definition of this yet. It is like the input circuit but also supports applying the polynomials to cells on offset rows. |
 
 Offsets are represented by hints $\big[\, (h_i, e_i) \,\big]$. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
+
+For simplicity we require that $i < m_f \Rightarrow h_i < m'_f$, i.e. the concrete circuit follows the same rule as the abstract circuit that fixed columns are on the left.
 
 > TODO: should we only allow nonnegative $e_i$? That would simplify the correctness condition below.
 
@@ -101,7 +103,7 @@ $$
 
 The values of concrete cells not corresponding to any constrained abstract cell are arbitrary.
 
-The fixed abstract cells $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$ are similarly translated to fixed concrete cells $f' \mathrel{⦂} \mathbb{F}^{m_f \times n'}$:
+The fixed abstract cells $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$ are similarly translated to fixed concrete cells $f' \mathrel{⦂} \mathbb{F}^{m'_f \times n'}$:
 $$
 f'[h_i, \mathbf{r}(j) + e_i] = f[i, j]
 $$
