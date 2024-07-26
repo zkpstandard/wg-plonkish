@@ -73,16 +73,16 @@ More specifically, to translate the abstract circuit to a concrete circuit using
 * all *constrained* abstract cells map to concrete cell coordinates that are in range;
 * every *constrained* abstract cell is represented by a distinct concrete cell, except that abstract cells that are equivalent under $\equiv$ *may* be identified.
 
-That is: for $R \subseteq [0, n)$ define
+That is: for $R \subseteq [0, n)$ and $\mathsf{hints} = \big[\, (h_i, e_i) \mathrel{⦂} [0,m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$ define
 $$
 \begin{array}{rcl}
-\mathsf{ok\_for}(R, \mathbf{r}) &=& \forall (i, j), (k, \ell) \in ([0, m) \times R) \times ([0, m) \times R) :\\[0.5ex]
+\mathsf{ok\_for}(R, \mathbf{r}, \mathsf{hints}) &=& \forall (i, j), (k, \ell) \in ([0, m) \times R) \times ([0, m) \times R) :\\[0.5ex]
 && \hspace{2em} (\mathsf{constrained}(i, j) \;\Rightarrow\; \mathbf{r}(j) + e_i \geq 0) \;\;\wedge\; \\[0.3ex]
 && \hspace{2em} (\mathsf{constrained}(i, j) \;\wedge\; \mathsf{constrained}(k, \ell) \;\wedge\; (i, j) \not\equiv (k, \ell) \;\Rightarrow\; (h_i, \mathbf{r}(j) + e_i) \neq (h_k, \mathbf{r}(\ell) + e_k)) \\
 \end{array}
 $$
 
-Then, the overall correctness condition is that $\mathbf{r}$ must be chosen such that $\mathsf{ok\_for}([0, n), \mathbf{r})$. We claim that this implies the more general definition of correctness preservation for this family of translations.
+Then, the overall correctness condition is that $\mathbf{r}$ must be chosen such that $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$. We claim that this implies the more general definition of correctness preservation for this family of translations.
 
 > Proof sketch [TODO remove handwaving]:
 >
@@ -135,11 +135,11 @@ There is a greedy algorithm for deterministically choosing $\mathbf{r}$ that mai
 | set $\mathbf{r} := \{\}$ |
 | set $a' := 0$ |
 | for $g$ from $0$ up to $n-1$: |
-| $\hspace{2em}$ find the minimal $g' \geq a'$ such that $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\})$ |
+| $\hspace{2em}$ find the minimal $g' \geq a'$ such that $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ |
 | $\hspace{2em}$ set $\mathbf{r} := \mathbf{r} \cup \{g \mapsto g'\}$ and $a' := g'+1$ |
 
 The number of concrete rows is then given by $n' = \max \big\{\, \mathbf{r}(j) + e_i : (i, j) \in ([0, m) \times [0, n)) \;\wedge\; \mathsf{constrained}(i, j) \,\big\} + 1$.
 
 This algorithm is correct because in the last step it finds $\mathbf{r}$ such that $\mathsf{ok\_for}([0, n), \mathbf{r})$, which is the correctness condition above.
 
-It is complete because for each step it is always possible to find a suitable $g'$: there is no upper bound on $g'$, and so we can always choose it large enough that any additional conditions of $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\})$ relative to $\mathsf{ok\_for}([0, g-1], \mathbf{r})$ hold. Specifically: by symmetry it is sufficient to consider the additional conditions for which $j = g$ and $\ell < g$. There must be some $g' = \mathbf{r}(j)$ such that $(h_i, g' + e_i)$ does not overlap with $(h_k, \mathbf{r}(\ell) + e_k)$ for any $i, k \in [0, m)$ and $\ell \in [0, g-1]$.
+It is complete because for each step it is always possible to find a suitable $g'$: there is no upper bound on $g'$, and so we can always choose it large enough that any additional conditions of $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ relative to $\mathsf{ok\_for}([0, g-1], \mathbf{r}, \mathsf{hints})$ hold. Specifically: by symmetry it is sufficient to consider the additional conditions for which $j = g$ and $\ell < g$. There must be some $g' = \mathbf{r}(j)$ such that $(h_i, g' + e_i)$ does not overlap with $(h_k, \mathbf{r}(\ell) + e_k)$ for any $i, k \in [0, m)$ and $\ell \in [0, g-1]$.
