@@ -56,6 +56,8 @@ The relation $\mathcal{R}_{\mathsf{plonkish}}$ takes instances of the following 
 
 TODO: consider splitting this into "circuit" and "instance vector", where an instance consists of both. This is so the circuit can be taken as input by the abstract-to-concrete compiler.
 
+Multivariate polynomials are defined below in the [Custom constraints](#custom-constraints) section.
+
 ### Witnesses
 
 The relation $\mathcal{R}_{\mathsf{plonkish}}$ takes witnesses of the following form:
