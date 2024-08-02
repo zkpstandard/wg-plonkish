@@ -1,0 +1,14 @@
+arithmetization
+handwaving
+iff
+indeterminates
+nonnegative
+Plonkish
+prover
+satisfiable
+th
+Tesselation
+TODO
+zk
+zkInterface
+ZKProof
