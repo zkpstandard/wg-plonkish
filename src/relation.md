@@ -35,20 +35,41 @@ If the proof system is knowledge sound, then the prover must have knowledge of t
 ### Instances
 
 The relation $\mathcal{R}_{\mathsf{plonkish}}$ takes instances of the following form:
+* Global instances
 
-| Instance element  | Description |
-| ----------------- | -------- |
-| $\mathbb{F}$      | A prime field. |
-| $t$               | Length of the instance vector. |
-| $\phi$            | The instance vector $\phi \mathrel{⦂} \mathbb{F}^t$. |
-| $n > 0$           | Number of rows. |
-| $m > 0$           | Number of columns. |
-| $\equiv$          | An equivalence relation on $[0,m) \times [0,n)$ indicating which witness entries are equal to each other. |
-| $S$               | A set $S \subseteq ([0,m) \times [0,n)) \times [0,t)$ indicating which witness entries are equal to instance vector entries. |
-| $m_f \leq m$      | Number of columns that are fixed. |
-| $f$               | The fixed content of the first $m_f$ columns, $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$. |
-| $p_u$             | Custom multivariate polynomials $p_u \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$. |
-| $\mathsf{CUS}_u$  | Sets $\mathsf{CUS}_u \subseteq [0,n)$ indicating rows on which the custom polynomials $p_u$ are constrained to evaluate to 0. |
+| Instance element | Description |
+|------------------| -------- |
+| $\mathbb{F}$     | A prime field. |
+| $n > 0$          | Number of rows. |
+| $m > 0$          | Number of columns. |
+
+* Instances for [Fixed constraints](#fixed-constraints)
+
+| Instance element | Description |
+|------------------| -------- |
+| $m_f \leq m$     | Number of columns that are fixed. |
+| $f$              | The fixed content of the first $m_f$ columns, $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$. |
+
+* Instances for [Copy constraints](#copy-constraints)
+
+| Instance element | Description |
+|------------------| -------- |
+| $\equiv$         | An equivalence relation on $[0,m) \times [0,n)$ indicating which witness entries are equal to each other. |
+| $t$              | Length of the instance vector. |
+| $\phi$           | The instance vector $\phi \mathrel{⦂} \mathbb{F}^t$. |
+| $S$              | A set $S \subseteq ([0,m) \times [0,n)) \times [0,t)$ indicating which witness entries are equal to instance vector entries. |
+
+* Instances for [Custom constraints](#custom-constraints)
+
+| Instance element | Description |
+|------------------| -------- |
+| $p_u$            | Custom multivariate polynomials $p_u \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$. |
+| $\mathsf{CUS}_u$ | Sets $\mathsf{CUS}_u \subseteq [0,n)$ indicating rows on which the custom polynomials $p_u$ are constrained to evaluate to 0. |
+
+* Instances for [Lookup constraints](#lookup-constraints)
+
+| Instance element | Description |
+|------------------| -------- |
 | $L_v$             | Number of table columns in each lookup table $\mathsf{TAB}_v$. |
 | $\mathsf{TAB}_v$  | Lookup tables $\mathsf{TAB}_v \subseteq \mathbb{F}^{L_v}$, each with a number of tuples in $\mathbb{F}^{L_v}$. |
 | $q_{v,s}$         | Scaling multivariate polynomials $q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$. |
