@@ -37,11 +37,11 @@ If the proof system is knowledge sound, then the prover must have knowledge of t
 The relation $\mathcal{R}_{\mathsf{plonkish}}$ takes instances of the following form:
 * Global instances
 
-| Instance element | Description |
-|------------------| -------- |
-| $\mathbb{F}$     | A prime field. |
-| $n > 0$          | Number of rows. |
-| $m > 0$          | Number of columns. |
+| Instance element | Description                               |
+|------------------|-------------------------------------------|
+| $\mathbb{F}$     | A prime field.                            |
+| $n > 0$          | Number of rows for the witness matrix.    |
+| $m > 0$          | Number of columns for the witness matrix. |
 
 * Instances for [Fixed constraints](#fixed-constraints)
 
@@ -68,11 +68,11 @@ The relation $\mathcal{R}_{\mathsf{plonkish}}$ takes instances of the following 
 
 * Instances for [Lookup constraints](#lookup-constraints)
 
-| Instance element | Description |
-|------------------| -------- |
-| $L_v$             | Number of table columns in each lookup table $\mathsf{TAB}_v$. |
-| $\mathsf{TAB}_v$  | Lookup tables $\mathsf{TAB}_v \subseteq \mathbb{F}^{L_v}$, each with a number of tuples in $\mathbb{F}^{L_v}$. |
-| $q_{v,s}$         | Scaling multivariate polynomials $q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$. |
+| Instance element | Description                                                                                                                                   |
+|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| $L_v$             | Number of columns for the $v$-th lookup table $\mathsf{TAB}_v$.                                                                               |
+| $\mathsf{TAB}_v$  | Lookup tables $\mathsf{TAB}_v \subseteq \mathbb{F}^{L_v}$, each with a number of tuples in $\mathbb{F}^{L_v}$.                                |
+| $q_{v,s}$         | Scaling multivariate polynomials $q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$.                |
 | $\mathsf{LOOK}_v$ | Sets $\mathsf{LOOK}_v \subseteq [0,n)$ indicating rows on which the scaling polynomials $q_{v,s}$ evaluate to some tuple in $\mathsf{TAB}_v$. |
 
 TODO: consider splitting this into "circuit" and "instance vector", where an instance consists of both. This is so the circuit can be taken as input by the abstract-to-concrete compiler.
