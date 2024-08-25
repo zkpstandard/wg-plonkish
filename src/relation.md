@@ -12,6 +12,8 @@ Plonkish arithmetization depends on a scalar field over a prime modulus $p$. We 
 
 The notation $a \text{..} b$ means the sequence of integers from $a$ (inclusive) to $b$ (exclusive) in ascending order. $[a, b)$ means the corresponding set of integers.
 
+The length of a sequence $S$, or the number of elements in a set $S$, is written $\#S$.
+
 $\big\{\, f(e) : e \in S \,\big\}$ means the set of evaluations of $f$ on the set $S$.
 
 $\big[\, f(e) : e \leftarrow a \text{..} b \,\big]$ means the sequence of evaluations of $f$ on $a \text{..} b$.
