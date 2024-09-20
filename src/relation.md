@@ -20,6 +20,8 @@ $\big[\, f(e) : e \leftarrow a \text{..} b \,\big]$ means the sequence of evalua
 
 $\big[\, A_e \,\big]_e$ means the sequence of $A_e$ for some implicitly defined sequence of indices $e$.
 
+When $f$ is a function that takes a tuple as argument, we will allow $f((i, j))$ to be written as $f[i, j]$.
+
 The terminology used here is intended to be consistent with the [ZKProof Community Reference](https://docs.zkproof.org/reference). We diverge from this terminology as follows:
 * We refer to the public inputs to the circuit as an "instance vector". The entries of this vector are called "instance variables" in the Community Reference.
 

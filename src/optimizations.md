@@ -41,12 +41,14 @@ Cell $w[i, j]$ "might be used" in $P(\vec{w}_j)$ iff $\exists z \in [0, \nu)$ s.
 ## Correctness-preserving translation of circuits
 
 What we mean by a correctness-preserving translation is that we know an efficient translation function from abstract circuits to concrete circuits, such that for any given translation:
-  * There is a bijective map $\mathcal{I}$, efficiently computable in both directions, between abstract instances and concrete instances.
-  * There is an efficient witness translation function $\mathcal{F}$ from abstract witnesses to concrete witnesses.
+  * There is a bijective map $\mathcal{I} \mathrel{⦂} \mathbb{F}^t \rightarrow \mathbb{F}^{t'}$, efficiently computable in both directions, between abstract instances and concrete instances.
+  * There is an efficient witness translation function $\mathcal{F} \mathrel{⦂} \mathbb{F}^{m \times n} \rightarrow \mathbb{F}^{m' \times n'}$ from abstract witnesses to concrete witnesses.
   * Completeness is preserved: given a satisfying instance $x$ and witness $w$ for the abstract circuit, $w' = \mathcal{F}(w)$ is a satisfying witness for the concrete circuit with instance $\mathcal{I}(x)$.
   * Knowledge soundness is preserved: given a satisfying instance $x'$ and witness $w'$ for the concrete circuit, we can efficiently compute some satisfying witness $w$ for the abstract circuit with instance $\mathcal{I}^{-1}(x')$.
 
 We also claim that a correctness-preserving translation in this sense, when used with a concrete proof system that is zero-knowledge, necessarily yields an overall proof system for the abstract relation that is zero-knowledge. That is, informally, no additional information about the abstract witness is revealed beyond the fact that the prover knows such a witness.
+
+> Aside: we could have required there to be an efficient reverse witness translation function $\mathcal{F}' \mathrel{⦂} \mathbb{F}^{m' \times n'} \rightarrow \mathbb{F}^{m \times n}$ from concrete witnesses to abstract witnesses, and then used $w = \mathcal{F}'(w')$ in the definition of knowledge soundness preservation. We do not take that approach because strictly speaking it would be an overspecification: we do not need the satisfying abstract witness to be *deterministically* and efficiently computable from the concrete witness; we only need it to be efficiently computable. Also, in general $w$ could also depend on the instance $x'$, not just $w'$. In practice, specifying such a function $\mathcal{F}'$ is likely to be the easiest way to prove knowledge soundness preservation.
 
 ## A model for a class of abstract-to-concrete translations and their correctness
 
@@ -71,8 +73,8 @@ Let $\mathsf{offsets}$ be the sequence of row offsets that are available to be u
 
 Informally, we define $\mathcal{R}_{\mathsf{concrete}}$ to be $\mathcal{R}_{\mathsf{plonkish}}$ with the following changes:
 
-* $\vec{w'}_{j'}$ is defined as the row vector $\big[\, w'[i, j' + \mathsf{offset}] : (i', \mathsf{offset}) \leftarrow (0 \text{..} n') \times \mathsf{offsets} \,\big]$.
-* $p_u$ and $q_{v,s}$ are each of type $\mathbb{F}^{\,\mathsf{windowsize}} \rightarrow \mathbb{F}$ where $\mathsf{windowsize} = m' \,\cdot\; \#\mathsf{offsets}$, instead of $\mathbb{F}^m \rightarrow \mathbb{F}$. They are applied to $\vec{w'}_{j'}$ as just defined instead of $\vec{w}_j$.
+* $\vec{w}'_{j'}$ is defined as the row vector $\big[\, w'[i', j' + \mathsf{offset}] : (i', \mathsf{offset}) \leftarrow (0 \text{..} n') \times \mathsf{offsets} \,\big]$.
+* $p'_u$ and $q'_{v,s}$ are each of type $\mathbb{F}^{\,\mathsf{windowsize}} \rightarrow \mathbb{F}$ where $\mathsf{windowsize} = m' \,\cdot\; \#\mathsf{offsets}$, instead of $\mathbb{F}^m \rightarrow \mathbb{F}$. They are applied to $\vec{w}'_{j'}$ as just defined instead of $\vec{w}_j$.
 
 We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).
 
@@ -118,14 +120,14 @@ Since correctness does not depend on the specific hints provided by the circuit 
 
 The constrained abstract cells $w \mathrel{⦂} \mathbb{F}^{m \times n}$ are translated to concrete cells $w' \mathrel{⦂} \mathbb{F}^{m' \times n'}$:
 $$
-\mathsf{constrained}(i, j) \Rightarrow w'[\mathsf{coord\_map}((i, j))] = w[i, j]
+\mathsf{constrained}(i, j) \Rightarrow w'[\mathsf{coord\_map}[i, j]] = w[i, j]
 $$
 
 The values of concrete cells not corresponding to any constrained abstract cell are arbitrary.
 
 The fixed abstract cells $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$ are similarly translated to fixed concrete cells $f' \mathrel{⦂} \mathbb{F}^{m'_f \times n'}$:
 $$
-f'[\mathsf{coord\_map}((i, j))] = f[i, j]
+f'[\mathsf{coord\_map}[i, j]] = f[i, j]
 $$
 
 Fixed concrete cells not assigned values by this translation are filled with zeros.
@@ -158,17 +160,43 @@ There is a greedy algorithm for deterministically choosing $\mathbf{r}$ that mai
 | $\hspace{2em}$ find the minimal $g' \geq a'$ such that $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ |
 | $\hspace{2em}$ set $\mathbf{r} := \mathbf{r} \cup \{g \mapsto g'\}$ and $a' := g'+1$ |
 
-The number of concrete rows is then given by $n' = \max \big\{\, \mathbf{r}(j) + e_i : (i, j) \in ([0, m) \times [0, n)) \;\wedge\; \mathsf{constrained}(i, j) \,\big\} + 1$.
+The number of concrete rows is then given by $n' = \max \big\{\, \mathbf{r}(j) + e_i : (i, j) \in ([0, m) \times [0, n)) \;\wedge\; \mathsf{constrained}(i, j) \,\big\} + 1$. The number of concrete columns $m'$ is implied by the type of $\mathsf{hints}$.
+
+Note that for each step it is always possible to find a suitable $g'$: there is no upper bound on $g'$, and so we can always choose it large enough that any additional conditions of $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ relative to $\mathsf{ok\_for}([0, g-1], \mathbf{r}, \mathsf{hints})$ hold. Specifically: by symmetry it is sufficient to consider the additional conditions for which $j = g$ and $\ell < g$. There must be some $g' = \mathbf{r}(j)$ such that $(h_i, g' + e_i)$ does not overlap with $(h_k, \mathbf{r}(\ell) + e_k)$ for any $i, k \in [0, m)$ and $\ell \in [0, g-1]$.
 
 ### Security proofs
 
 #### $\mathsf{FIND\_ROW\_MAPPING}$ gives a correctness-preserving translation
 
-Let $\mathsf{coord\_map}$ be as defined in (1).
+Recall from [Correctness-preserving translation of circuits](#correctness-preserving-translation-of-circuits) above that:
 
-We can define $\mathcal{F}$ by giving its value $\mathcal{F}(w) = w'$ for every cell in $w'$.
+> What we mean by a correctness-preserving translation is that we know an efficient translation function from abstract circuits to concrete circuits, such that for any given translation:
+>   * There is a bijective map $\mathcal{I} \mathrel{⦂} \mathbb{F}^t \rightarrow \mathbb{F}^{t'}$, efficiently computable in both directions, between abstract instances and concrete instances.
+>   * There is an efficient witness translation function $\mathcal{F} \mathrel{⦂} \mathbb{F}^{m \times n} \rightarrow \mathbb{F}^{m' \times n'}$ from abstract witnesses to concrete witnesses.
+>   * Completeness is preserved: given a satisfying instance $x$ and witness $w$ for the abstract circuit, $w' = \mathcal{F}(w)$ is a satisfying witness for the concrete circuit with instance $\mathcal{I}(x)$.
+>   * Knowledge soundness is preserved: given a satisfying instance $x'$ and witness $w'$ for the concrete circuit, we can efficiently compute some satisfying witness $w$ for the abstract circuit with instance $\mathcal{I}^{-1}(x')$.
 
-Because we have $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$ where
+Define $\mathcal{I}(x) = x$, which is clearly invertible and efficiently computable in both directions.
+
+The concrete witness $w' \mathrel{⦂} \mathbb{F}^{m' \times n'}$ consists of the matrix of concrete values provided by the prover, as defined in [Preliminary definitions](#preliminary-definitions). Like the abstract witness, it consists of the (potentially private) prover inputs to the concrete circuit, and any intermediate values (including fixed values) that are not inputs to the concrete circuit but are required in order to satisfy it.
+
+We now define our efficient abstract-to-concrete witness translation function $\mathcal{F}$, which maps from the abstract witness $w$ to the concrete witness $w'$, by giving its value $\mathcal{F}(w) = w'$ for every cell.
+
+Let $n'$ and $m'$ be as defined by $\mathsf{FIND\_ROW\_MAPPING}$ above. Let $\mathsf{coord\_map}$ be as defined in (1).
+
+Let $\mathsf{inv\_coord\_map} \mathrel{⦂} (m' \times n') \rightarrow (m \times n) \cup \{\bot\}$ be defined such that $\mathsf{inv\_coord\_map}[i', j']$ is the unique $(i, j) \in [0, m) \times [0, n)$ such that $\mathsf{constrained}[i, j]$ is true and $\mathsf{coord\_map}[i, j] = (i', j')$, or $\bot$ if there is no such $(i, j)$.
+
+Then let $\mathcal{F}(w) = w'$ where
+$$
+w'[i', j'] = \begin{cases}
+  w[\mathsf{inv\_coord\_map}[i', j']], &\text{if } \mathsf{inv\_coord\_map}[i', j'] \neq \bot \\
+  0,                                   &\text{otherwise.}
+\end{cases}
+$$
+
+This completely specifies $\mathcal{F}$, and furthermore shows that $\mathcal{F}$ is efficiently computable.
+
+Note that $\mathsf{inv\_coord\_map}$ is well-defined because $\mathsf{FIND\_ROW\_MAPPING}$ ensures by construction that $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$ holds, where
 $$
 \begin{array}{rcl}
 \mathsf{ok\_for}(R, \mathbf{r}, \mathsf{hints}) &=& \forall (i, j), (k, \ell) \in ([0, m) \times R) \times ([0, m) \times R) :\\[0.5ex]
@@ -176,18 +204,48 @@ $$
 && \hspace{2em} (\mathsf{constrained}[i, j] \;\wedge\; \mathsf{constrained}[k, \ell] \;\wedge\; (i, j) \not\equiv (k, \ell) \;\Rightarrow\; \mathsf{coord\_map}[i, j] \neq \mathsf{coord\_map}[k, \ell]) \\
 \end{array}
 $$
-it must be the case that for any $(i', j') \in [0, m') \times [0, n')$, there is at most one $(i, j) \in [0, m) \times [0, n)$ such that $\mathsf{constrained}[i, j]$ and $\mathsf{coord_map}[i, j] = (i', j')$. If there is no such $(i, j)$ then set $w'[i', j'] = 0$, otherwise set $w'[i', j'] = w[i, j]$.
 
-This completely specifies $\mathcal{F}$, and furthermore shows that $\mathcal{F}$ is efficiently computable.
+We can also define an efficient concrete-to-abstract witness translation function $\mathcal{F}' \mathrel{⦂} \mathbb{F}^{m' \times n'} \rightarrow \mathbb{F}^{m \times n}$, by similarly giving its value for every cell:
 
-Define $\mathcal{I}(x) = x$, which is obviously invertible.
+Let $\mathcal{F}'(w') = w$ where $w[i, j] = w'[\mathsf{coord\_map}[i, j]]$.
 
-In order that $\mathsf{FIND\_ROW\_MAPPING}$ gives a correctness-preserving translation, it remains to show:
-1. $\forall (x, w) \in \mathcal{R}_{\mathsf{plonkish}}$, $(x', w') = (\mathcal{I}(x), \mathcal{F}(w)) = (x, \mathcal{F}(w)) \in \mathcal{R}_{\mathsf{concrete}}$.
-2. $\forall (x', w') \in \mathcal{R}_{\mathsf{concrete}}$, we can efficiently compute some $w$ such that $(\mathcal{I}^{-1}(x'), w) = (x', w) \in \mathcal{R}_{\mathsf{plonkish}}$.
+(It happens that $\mathcal{F}'$ as we have defined it here is a [left inverse](https://en.wikipedia.org/wiki/Inverse_function#Left_inverses) of $\mathcal{F}$. This is not strictly necessary since the values of unconstrained abstract cells could be arbitrary.)
 
-TODO: fill in the gaps.
+In order that $\mathsf{FIND\_ROW\_MAPPING}$ gives a correctness-preserving translation, it remains to show that:
+1. Completeness is preserved: $\forall (x, w) \in \mathcal{R}_{\mathsf{plonkish}}$, $(x', w') = (\mathcal{I}(x), \mathcal{F}(w)) = (x, \mathcal{F}(w)) \in \mathcal{R}_{\mathsf{concrete}}$.
+2. Knowledge soundness is preserved: $\forall (x', w') \in \mathcal{R}_{\mathsf{concrete}}$, we can efficiently compute $w = \mathcal{F}'(w')$ such that $(\mathcal{I}^{-1}(x'), w) = (x', w) \in \mathcal{R}_{\mathsf{plonkish}}$.
 
-Condition 1 is met because for each step it is always possible to find a suitable $g'$: there is no upper bound on $g'$, and so we can always choose it large enough that any additional conditions of $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ relative to $\mathsf{ok\_for}([0, g-1], \mathbf{r}, \mathsf{hints})$ hold. Specifically: by symmetry it is sufficient to consider the additional conditions for which $j = g$ and $\ell < g$. There must be some $g' = \mathbf{r}(j)$ such that $(h_i, g' + e_i)$ does not overlap with $(h_k, \mathbf{r}(\ell) + e_k)$ for any $i, k \in [0, m)$ and $\ell \in [0, g-1]$.
+For condition 1, we have $\forall (x, w) \in \mathcal{R}_{\mathsf{plonkish}}$, which means that
+$$
+\begin{array}{ll|l}
+   w \mathrel{⦂} \mathbb{F}^{m \times n}, \ f \mathrel{⦂} \mathbb{F}^{m_f \times n} & & i \in [0,m_f), \ j \in [0,n) \Rightarrow w[i, j] = f[i, j] \\[0.3ex]
+   S \subseteq ([0,m) \times [0,n)) \times [0,t), \ \phi \mathrel{⦂} \mathbb{F}^t & & ((i,j),k) \in S \Rightarrow w[i, j] = \phi[k] \\[0.3ex]
+   \equiv\; \subseteq ([0,m) \times [0,n)) \times ([0,m) \times [0,n)) & & (i,j) \equiv (k,\ell) \Rightarrow w[i, j] = w[k, \ell] \\[0.3ex]
+   \mathsf{CUS}_u \subseteq [0,n), \ p_u \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F} & & j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0 \\[0.3ex]
+   \mathsf{LOOK}_v \subseteq [0,n), \ q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
+\end{array}
+$$
 
-Condition 2 is met because in the last step the algorithm finds $\mathbf{r}$ such that $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$, which is the correctness condition above.
+We must prove that this implies $(x, \mathcal{F}(w)) \in \mathcal{R}_{\mathsf{concrete}}$, i.e.
+$$
+\begin{array}{ll|l}
+   w' \mathrel{⦂} \mathbb{F}^{m' \times n'}, \ f' \mathrel{⦂} \mathbb{F}^{m'_f \times n'} & & i' \in [0,m'_f), \ j' \in [0,n') \Rightarrow w'[i', j'] = f[i', j'] \\[0.3ex]
+   S' \subseteq ([0,m') \times [0,n')) \times [0,t), \ \phi \mathrel{⦂} \mathbb{F}^t & & ((i',j'),k) \in S' \Rightarrow w'[i', j'] = \phi[k] \\[0.3ex]
+   \equiv'\; \subseteq ([0,m') \times [0,n')) \times ([0,m') \times [0,n')) & & (i',j') \equiv (k',\ell') \Rightarrow w'[i', j'] = w'[k', \ell'] \\[0.3ex]
+   \mathsf{CUS}'_u \subseteq [0,n'), \ p'_u \mathrel{⦂} \mathbb{F}^{m'} \rightarrow \mathbb{F} & & j' \in \mathsf{CUS}'_u \Rightarrow p'_u(\vec{w}'_{j'}) = 0 \\[0.3ex]
+   \mathsf{LOOK}'_v \subseteq [0,n'), \ q'_{v,s} \mathrel{⦂} \mathbb{F}^{m'} \rightarrow \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j' \in \mathsf{LOOK}'_v \Rightarrow \big[\, q'_{v,s}(\vec{w}'_{j'}) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
+\end{array}
+$$
+
+For condition 2, the abstract witness $w$ that we find will be $\mathcal{F}'(x')$. Since $\mathcal{I}$ is the identity function, we have that for any $(x', w') \mathrel{⦂} \mathbb{F}^t \times \mathbb{F}^{m' \times n'}$, $(\mathcal{I}^{-1}(x'), \mathcal{F}'(x')) = (x', w)$ exists and is efficiently computable. We must also prove that $(x', w') \in \mathcal{R}_{\mathsf{concrete}} \Rightarrow (x', w) \in \mathcal{R}_{\mathsf{plonkish}}$ (i.e. loosely speaking, the converse of what we need to prove for condition 1).
+
+Given the definitions from [above](#constraint-translations), it is straightforward to see that in the statements to be proven for both conditions:
+
+* the concrete fixed constraints for concrete cells $((i',j'),k) \in S'$ are in one-to-one correspondence with equivalent abstract fixed constraints for abstract cells $((i,j),k) \in S$;
+* the concrete copy constraints for concrete cells $(i',j') \equiv' (k',\ell')$ are in one-to-one correspondence with equivalent abstract copy constraints for abstract cells $(i,j) \equiv (k,\ell)$;
+* the concrete custom constraints for concrete rows $j' \in \mathsf{CUS}'_u$, are in one-to-one correspondence with equivalent abstract custom constraints for abstract rows $j \in \mathsf{CUS}_u$;
+* the concrete lookup constraints for concrete rows $j' \in \mathsf{LOOK}'_v$, are in one-to-one correspondence with equivalent abstract lookup constraints for abstract rows $j \in \mathsf{LOOK}_v$.
+
+By "equivalent" here we mean that each concrete constraint is satisfied if and only if the corresponding abstract constraint is satisfied, given the above mappings between $(x, w)$ and $(x', w')$. Since the concrete and abstract constraints are also in one-to-one correspondence, all of the concrete constraints are satisfied if and only if all of the abstract constraints are satisfied.
+
+The "if" direction implies condition 1, and the "only if" direction implies condition 2. Therefore, both completeness and knowledge soundness are preserved. $\blacksquare$
