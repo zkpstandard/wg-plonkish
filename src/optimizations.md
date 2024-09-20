@@ -18,7 +18,9 @@ We will use the convention that variables marked with a prime ($'$) refer to *co
 
 An "abstract cell" specifies an entry in the witness matrix $w$ of the abstract circuit. A "concrete cell" specifies an entry in the witness matrix $w'$ of the concrete circuit.
 
-We say that an abstract cell with coordinates $(i, j)$ is "constrained" if it is in a fixed column or if it appears in some copy, custom, or lookup constraint. More precisely, $\mathsf{constrained}(i, j)$ is true iff any of the following hold:
+We will denote the witness value at column $i$ and row $j$ as $w[i, j]$.
+
+We say that an abstract cell with coordinates $(i, j)$ is "constrained" if it is in a fixed column or if it appears in some copy, custom, or lookup constraint. More precisely, $\mathsf{constrained}[i, j]$ is true iff any of the following hold:
 $$
 \begin{array}{rcl}
 && i < m_f \\
@@ -59,13 +61,26 @@ In our model, the abstract witness matrix $w$ consists of $m$ abstract columns, 
 
 | Translation output | Description |
 | ------------------ | -------- |
-| output circuit     | TODO: We don't have a definition of this yet. It is like the input circuit but also supports applying the polynomials to cells on offset rows. |
+| output circuit     | This is like the input circuit but also supports applying the polynomials to cells on offset rows. |
+
+### Adapting $\mathcal{R}_{\mathsf{plonkish}}$ to concrete circuits
+
+To define a relation for concrete circuits, it is necessary to directly handle row offsets.
+
+Let $\mathsf{offsets}$ be the sequence of row offsets that are available to be used in concrete gates and concrete lookups.
+
+Informally, we define $\mathcal{R}_{\mathsf{concrete}}$ to be $\mathcal{R}_{\mathsf{plonkish}}$ with the following changes:
+
+* $\vec{w'}_{j'}$ is defined as the row vector $\big[\, w'[i, j' + \mathsf{offset}] : (i', \mathsf{offset}) \leftarrow (0 \text{..} n') \times \mathsf{offsets} \,\big]$.
+* $p_u$ and $q_{v,s}$ are each of type $\mathbb{F}^{\,\mathsf{windowsize}} \rightarrow \mathbb{F}$ where $\mathsf{windowsize} = m' \,\cdot\; \#\mathsf{offsets}$, instead of $\mathbb{F}^m \rightarrow \mathbb{F}$. They are applied to $\vec{w'}_{j'}$ as just defined instead of $\vec{w}_j$.
+
+We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).
+
+### Hints
 
 Offsets are represented by hints $\big[\, (h_i, e_i) \,\big]$. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
 
 For simplicity we require that $i < m_f \Rightarrow h_i < m'_f$, i.e. the concrete circuit follows the same rule as the abstract circuit that fixed columns are on the left.
-
-> TODO: should we only allow nonnegative $e_i$? That would simplify the correctness condition below.
 
 Tesselation between custom constraints is just represented by equivalence under $\equiv$. When the offset hints indicate that two concrete cells in the same column are equivalent, the backend can optimize overall circuit area by reordering the rows so that the equivalent cells overlap.
 
@@ -73,12 +88,17 @@ More specifically, to translate the abstract circuit to a concrete circuit using
 * all *constrained* abstract cells map to concrete cell coordinates that are in range;
 * every *constrained* abstract cell is represented by a distinct concrete cell, except that abstract cells that are equivalent under $\equiv$ *may* be identified.
 
-That is: for $R \subseteq [0, n)$ and $\mathsf{hints} = \big[\, (h_i, e_i) \mathrel{⦂} [0,m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$ define
+For given hints $\mathsf{hints} = \big[\, (h_i, e_i) \mathrel{⦂} [0, m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$, define the coordinate mapping $\mathsf{coord\_map} \mathrel{⦂} [0, m) \times [0, n) \rightarrow [0, m') \times \mathbb{Z}$ as
+$$
+\mathsf{coord\_map}[i, j] = (h_i, \mathbf{r}(j) + e_i) \tag{1}
+$$
+
+Then, for $R \subseteq [0, n)$ and $\mathsf{hints}$ as above, define
 $$
 \begin{array}{rcl}
 \mathsf{ok\_for}(R, \mathbf{r}, \mathsf{hints}) &=& \forall (i, j), (k, \ell) \in ([0, m) \times R) \times ([0, m) \times R) :\\[0.5ex]
-&& \hspace{2em} (\mathsf{constrained}(i, j) \;\Rightarrow\; \mathbf{r}(j) + e_i \geq 0) \;\;\wedge\; \\[0.3ex]
-&& \hspace{2em} (\mathsf{constrained}(i, j) \;\wedge\; \mathsf{constrained}(k, \ell) \;\wedge\; (i, j) \not\equiv (k, \ell) \;\Rightarrow\; (h_i, \mathbf{r}(j) + e_i) \neq (h_k, \mathbf{r}(\ell) + e_k)) \\
+&& \hspace{2em} (\mathsf{constrained}[i, j] \;\Rightarrow\; \mathsf{coord\_map}[i, j] \in [0, m') \times \mathbb{N} \;\;\wedge\; \\[0.3ex]
+&& \hspace{2em} (\mathsf{constrained}[i, j] \;\wedge\; \mathsf{constrained}[k, \ell] \;\wedge\; (i, j) \not\equiv (k, \ell) \;\Rightarrow\; \mathsf{coord\_map}[i, j] \neq \mathsf{coord\_map}[k, \ell]) \\
 \end{array}
 $$
 
@@ -86,7 +106,7 @@ Then, the overall correctness condition is that $\mathbf{r}$ must be chosen such
 
 > Proof sketch [TODO remove handwaving]:
 >
-> $\mathcal{I}$ is the identity function and $\mathcal{F}$ is described below. $\mathcal{F}$, $\mathcal{I}$, and $\mathcal{I}^{-1}$ are obviously efficiently computable. Given that the concrete custom constraints and lookups are just the abstract constraints and lookups modified to access the same witness values in their translated locations, preservation of completeness follows immediately. Preservation of knowledge soundness holds because, informally, we can invert the coordinate translation defined by $\mathcal{F}$ to reconstruct all of the abstract witness cells that are needed to satisfy the abstract relation.
+> $\mathcal{I}$ is the identity function and $\mathcal{F}$ is described below. $\mathcal{F}$, $\mathcal{I}$, and $\mathcal{I}^{-1}$ are obviously efficiently computable. Given that the concrete custom constraints and lookups are just the abstract constraints and lookups modified to access the same witness values in their translated locations (and the translation mapping is bijective), preservation of completeness follows immediately. Preservation of knowledge soundness holds because, informally, we can invert the coordinate translation defined by $\mathcal{F}$ to reconstruct all of the abstract witness cells that are needed to satisfy the abstract relation.
 
 Discussion: It is alright if one or more *unconstrained* abstract cells map to the same concrete cell as a constrained abstract cell, because that will not affect the meaning of the circuit. Notice that specifying $\equiv$ as an equivalence relation helps to simplify this definition (as compared to specifying it as a set of copy constraints), because an equivalence relation is by definition symmetric, reflexive, and transitive.
 
@@ -98,14 +118,14 @@ Since correctness does not depend on the specific hints provided by the circuit 
 
 The constrained abstract cells $w \mathrel{⦂} \mathbb{F}^{m \times n}$ are translated to concrete cells $w' \mathrel{⦂} \mathbb{F}^{m' \times n'}$:
 $$
-\mathsf{constrained}(i, j) \Rightarrow w'[h_i, \mathbf{r}(j) + e_i] = w[i, j]
+\mathsf{constrained}(i, j) \Rightarrow w'[\mathsf{coord\_map}((i, j))] = w[i, j]
 $$
 
 The values of concrete cells not corresponding to any constrained abstract cell are arbitrary.
 
 The fixed abstract cells $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$ are similarly translated to fixed concrete cells $f' \mathrel{⦂} \mathbb{F}^{m'_f \times n'}$:
 $$
-f'[h_i, \mathbf{r}(j) + e_i] = f[i, j]
+f'[\mathsf{coord\_map}((i, j))] = f[i, j]
 $$
 
 Fixed concrete cells not assigned values by this translation are filled with zeros.
@@ -126,7 +146,7 @@ $$
 j' \in \mathsf{LOOK}'_v \Rightarrow \big[\, q_{v,s}\!\left(\big[\,w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m \,\big]\right) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
 $$
 
-### Greedy algorithm for choosing $\mathbf{r}$
+### Algorithm $\mathsf{FIND\_ROW\_MAPPING}$: Greedy algorithm for choosing $\mathbf{r}$
 
 There is a greedy algorithm for deterministically choosing $\mathbf{r}$ that maintains ordering of rows (i.e. $\mathbf{r}$ is strictly increasing), and simply inserts a gap in the row mapping whenever the above constraint would not be met for all rows so far.
 
@@ -140,6 +160,34 @@ There is a greedy algorithm for deterministically choosing $\mathbf{r}$ that mai
 
 The number of concrete rows is then given by $n' = \max \big\{\, \mathbf{r}(j) + e_i : (i, j) \in ([0, m) \times [0, n)) \;\wedge\; \mathsf{constrained}(i, j) \,\big\} + 1$.
 
-This algorithm is correct because in the last step it finds $\mathbf{r}$ such that $\mathsf{ok\_for}([0, n), \mathbf{r})$, which is the correctness condition above.
+### Security proofs
 
-It is complete because for each step it is always possible to find a suitable $g'$: there is no upper bound on $g'$, and so we can always choose it large enough that any additional conditions of $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ relative to $\mathsf{ok\_for}([0, g-1], \mathbf{r}, \mathsf{hints})$ hold. Specifically: by symmetry it is sufficient to consider the additional conditions for which $j = g$ and $\ell < g$. There must be some $g' = \mathbf{r}(j)$ such that $(h_i, g' + e_i)$ does not overlap with $(h_k, \mathbf{r}(\ell) + e_k)$ for any $i, k \in [0, m)$ and $\ell \in [0, g-1]$.
+#### $\mathsf{FIND\_ROW\_MAPPING}$ gives a correctness-preserving translation
+
+Let $\mathsf{coord\_map}$ be as defined in (1).
+
+We can define $\mathcal{F}$ by giving its value $\mathcal{F}(w) = w'$ for every cell in $w'$.
+
+Because we have $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$ where
+$$
+\begin{array}{rcl}
+\mathsf{ok\_for}(R, \mathbf{r}, \mathsf{hints}) &=& \forall (i, j), (k, \ell) \in ([0, m) \times R) \times ([0, m) \times R) :\\[0.5ex]
+&& \hspace{2em} (\mathsf{constrained}[i, j] \;\Rightarrow\; \mathsf{coord\_map}[i, j] \in [0, m') \times \mathbb{N} \;\;\wedge\; \\[0.3ex]
+&& \hspace{2em} (\mathsf{constrained}[i, j] \;\wedge\; \mathsf{constrained}[k, \ell] \;\wedge\; (i, j) \not\equiv (k, \ell) \;\Rightarrow\; \mathsf{coord\_map}[i, j] \neq \mathsf{coord\_map}[k, \ell]) \\
+\end{array}
+$$
+it must be the case that for any $(i', j') \in [0, m') \times [0, n')$, there is at most one $(i, j) \in [0, m) \times [0, n)$ such that $\mathsf{constrained}[i, j]$ and $\mathsf{coord_map}[i, j] = (i', j')$. If there is no such $(i, j)$ then set $w'[i', j'] = 0$, otherwise set $w'[i', j'] = w[i, j]$.
+
+This completely specifies $\mathcal{F}$, and furthermore shows that $\mathcal{F}$ is efficiently computable.
+
+Define $\mathcal{I}(x) = x$, which is obviously invertible.
+
+In order that $\mathsf{FIND\_ROW\_MAPPING}$ gives a correctness-preserving translation, it remains to show:
+1. $\forall (x, w) \in \mathcal{R}_{\mathsf{plonkish}}$, $(x', w') = (\mathcal{I}(x), \mathcal{F}(w)) = (x, \mathcal{F}(w)) \in \mathcal{R}_{\mathsf{concrete}}$.
+2. $\forall (x', w') \in \mathcal{R}_{\mathsf{concrete}}$, we can efficiently compute some $w$ such that $(\mathcal{I}^{-1}(x'), w) = (x', w) \in \mathcal{R}_{\mathsf{plonkish}}$.
+
+TODO: fill in the gaps.
+
+Condition 1 is met because for each step it is always possible to find a suitable $g'$: there is no upper bound on $g'$, and so we can always choose it large enough that any additional conditions of $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ relative to $\mathsf{ok\_for}([0, g-1], \mathbf{r}, \mathsf{hints})$ hold. Specifically: by symmetry it is sufficient to consider the additional conditions for which $j = g$ and $\ell < g$. There must be some $g' = \mathbf{r}(j)$ such that $(h_i, g' + e_i)$ does not overlap with $(h_k, \mathbf{r}(\ell) + e_k)$ for any $i, k \in [0, m)$ and $\ell \in [0, g-1]$.
+
+Condition 2 is met because in the last step the algorithm finds $\mathbf{r}$ such that $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$, which is the correctness condition above.
