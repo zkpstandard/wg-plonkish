@@ -118,14 +118,14 @@ Since correctness does not depend on the specific hints provided by the circuit 
 
 The constrained abstract cells $w \mathrel{⦂} \mathbb{F}^{m \times n}$ are translated to concrete cells $w' \mathrel{⦂} \mathbb{F}^{m' \times n'}$:
 $$
-\mathsf{constrained}(i, j) \Rightarrow w'[\mathsf{coord\_map}((i, j))] = w[i, j]
+\mathsf{constrained}(i, j) \Rightarrow w'[\mathsf{coord\_map}[i, j]] = w[i, j]
 $$
 
 The values of concrete cells not corresponding to any constrained abstract cell are arbitrary.
 
 The fixed abstract cells $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$ are similarly translated to fixed concrete cells $f' \mathrel{⦂} \mathbb{F}^{m'_f \times n'}$:
 $$
-f'[\mathsf{coord\_map}((i, j))] = f[i, j]
+f'[\mathsf{coord\_map}[i, j]] = f[i, j]
 $$
 
 Fixed concrete cells not assigned values by this translation are filled with zeros.
