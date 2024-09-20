@@ -73,8 +73,8 @@ Let $\mathsf{offsets}$ be the sequence of row offsets that are available to be u
 
 Informally, we define $\mathcal{R}_{\mathsf{concrete}}$ to be $\mathcal{R}_{\mathsf{plonkish}}$ with the following changes:
 
-* $\vec{w'}_{j'}$ is defined as the row vector $\big[\, w'[i, j' + \mathsf{offset}] : (i', \mathsf{offset}) \leftarrow (0 \text{..} n') \times \mathsf{offsets} \,\big]$.
-* $p_u$ and $q_{v,s}$ are each of type $\mathbb{F}^{\,\mathsf{windowsize}} \rightarrow \mathbb{F}$ where $\mathsf{windowsize} = m' \,\cdot\; \#\mathsf{offsets}$, instead of $\mathbb{F}^m \rightarrow \mathbb{F}$. They are applied to $\vec{w'}_{j'}$ as just defined instead of $\vec{w}_j$.
+* $\vec{w}'_{j'}$ is defined as the row vector $\big[\, w'[i', j' + \mathsf{offset}] : (i', \mathsf{offset}) \leftarrow (0 \text{..} n') \times \mathsf{offsets} \,\big]$.
+* $p'_u$ and $q'_{v,s}$ are each of type $\mathbb{F}^{\,\mathsf{windowsize}} \rightarrow \mathbb{F}$ where $\mathsf{windowsize} = m' \,\cdot\; \#\mathsf{offsets}$, instead of $\mathbb{F}^m \rightarrow \mathbb{F}$. They are applied to $\vec{w}'_{j'}$ as just defined instead of $\vec{w}_j$.
 
 We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).
 
