@@ -5,6 +5,10 @@ Plonkish Constraint System Working Group is developing a specification, a
 reference implementation written in Rust, and test vectors for
 *Plonkish arithmetisation*.
 
+![Plonkish Constraint Systems](https://zkproof.org/wp-content/uploads/2023/09/01-zkproof55_2023_Page_36-uai-2880x1620.jpg)
+
+Checkout [Mary's presentation about the Plonkish Working Group](https://zkproof.org/2023/09/12/plonk-standardization-zkproof-5-5-mary-maller-talk-summary/).
+
 Plonkish arithmetisation is a means of expressing circuits for probabilistic
 and/or zero-knowledge proving systems. This arithmetisation was originally
 developed in the context of the [PLONK](https://eprint.iacr.org/2019/953)
