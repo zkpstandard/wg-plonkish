@@ -25,14 +25,16 @@ When $f$ is a function that takes a tuple as argument, we will allow $f((i, j))$
 The terminology used here is intended to be consistent with the [ZKProof Community Reference](https://docs.zkproof.org/reference). We diverge from this terminology as follows:
 * We refer to the public inputs to the circuit as an "instance vector". The entries of this vector are called "instance variables" in the Community Reference.
 
-## The Plonkish Relation $\mathcal{R}_{\mathsf{plonkish}}$
+## The General Plonkish Relation $\mathcal{R}_{\mathsf{plonkish}}$
 
-The relation $\mathcal{R}_{\mathsf{plonkish}}$ contains pairs of $(x, w)$ where:
-* the instance $x$ consists of the parameters of the proof system, the circuit, and the public inputs to the circuit (i.e. the instance vector).
+The general relation $\mathcal{R}_{\mathsf{plonkish}}$ contains pairs of $(x, w)$ where:
+* the instance $x$ consists of the parameters of the proof system, the circuit $C$, and the public inputs to the circuit (i.e. the instance vector).
 * the witness $w$ consists of the matrix of values provided by the prover. In this model it consists of the (potentially private) prover inputs to the circuit, and any intermediate values (including fixed values) that are not inputs to the circuit but are required in order to satisfy it.
 
 We say that a $x$ is a *valid* instance whenever there exists some witness $w$ such that $(x, w) \in \mathcal{R}_{\mathsf{plonkish}}$ holds.
 The Plonkish language $\mathcal{L}_{\mathsf{plonkish}}$ contains all valid instances.
+
+A circuit-specific relation is a specialization of $\mathcal{R}_{\mathsf{plonkish}}$ to a particular circuit.
 
 If the proof system is knowledge sound, then the prover must have knowledge of the witness in order to construct a valid proof. If it is also zero knowledge, then witness entries can be private, and an honestly generated proof leaks no information about the private inputs to the circuit beyond the fact that it was obtained with knowledge of some satisfying witness.
 
@@ -43,8 +45,14 @@ The relation $\mathcal{R}_{\mathsf{plonkish}}$ takes instances of the following 
 | Instance element  | Description |
 | ----------------- | -------- |
 | $\mathbb{F}$      | A prime field. |
+| $C$               | The circuit. |
+| $\phi$            | The instance vector $\phi \mathrel{⦂} \mathbb{F}^{C.t}$. |
+
+The circuit $C \mathrel{⦂} \mathsf{AbstractCircuit}_{\mathbb{F}}$ in turn has the following form:
+
+| Circuit element   | Description |
+| ----------------- | -------- |
 | $t$               | Length of the instance vector. |
-| $\phi$            | The instance vector $\phi \mathrel{⦂} \mathbb{F}^t$. |
 | $n > 0$           | Number of rows. |
 | $m > 0$           | Number of columns. |
 | $\equiv$          | An equivalence relation on $[0,m) \times [0,n)$ indicating which witness entries are equal to each other. |
@@ -57,8 +65,6 @@ The relation $\mathcal{R}_{\mathsf{plonkish}}$ takes instances of the following 
 | $\mathsf{TAB}_v$  | Lookup tables $\mathsf{TAB}_v \subseteq \mathbb{F}^{L_v}$, each with a number of tuples in $\mathbb{F}^{L_v}$. |
 | $q_{v,s}$         | Scaling multivariate polynomials $q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$. |
 | $\mathsf{LOOK}_v$ | Sets $\mathsf{LOOK}_v \subseteq [0,n)$ indicating rows on which the scaling polynomials $q_{v,s}$ evaluate to some tuple in $\mathsf{TAB}_v$. |
-
-TODO: consider splitting this into "circuit" and "instance vector", where an instance consists of both. This is so the circuit can be taken as input by the abstract-to-concrete compiler.
 
 Multivariate polynomials are defined below in the [Custom constraints](#custom-constraints) section.
 
@@ -76,7 +82,7 @@ Define $\vec{w}_j$ as the row vector $\big[\, w[i, j] : i \leftarrow 0 \text{..}
 
 Given the above definitions, the relation $\mathcal{R}_{\mathsf{plonkish}}$ corresponds to a set of $\,(\!$ instance $\!,\,$ witness $\!)\,$ pairs
 $$
-\Big(x = \big(\mathbb{F}, t, \phi, n, m, \equiv, S, m_f, f, \big[\, (p_u, \mathsf{CUS}_{u}) \,\big]_u, \big[\, (L_v, \mathsf{TAB}_v, \big[\, q_{v,s} \,\big]_s, \mathsf{LOOK}_v) \,\big]_v\big),\, w \Big)
+\left(x = \left(\mathbb{F}, C = \left(t, n, m, \equiv, S, m_f, f, \left[\, (p_u, \mathsf{CUS}_{u}) \,\right]_u, \left[\, (L_v, \mathsf{TAB}_v, \left[\, q_{v,s} \,\right]_s, \mathsf{LOOK}_v) \,\right]_v\right), \phi\right),\, w \right)
 $$
 such that:
 $$
@@ -88,6 +94,8 @@ $$
    \mathsf{LOOK}_v \subseteq [0,n), \ q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
 \end{array}
 $$
+
+In this model, a circuit-specific relation $\mathcal{R}_{\mathbb{F}, C}$ for a field $\mathbb{F}$ and circuit $C$ is the relation $\mathcal{R}_{\mathsf{plonkish}}$ restricted to $\{ ((\mathbb{F}, C, \phi \mathrel{⦂} \mathbb{F}^{C.t}), w \mathrel{⦂} \mathbb{F}^{C.m \times C.n}) \}$.
 
 ### Conditions satisfied by statements in $\mathcal{R}_{\mathsf{plonkish}}$
 
