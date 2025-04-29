@@ -30,6 +30,11 @@ development and have not been fully reviewed.
 
 The rendered documents can be viewed at [docs/index.html](docs/index.html).
 
+## Lean 4 prerequisites
+
+To use the Lean formalization, we recommend VS Code. Instructions on setting
+up VS Code for Lean 4 are [here](https://lean-lang.org/documentation/setup/).
+
 ## License
 
 All files in this repository are licensed under any of:
