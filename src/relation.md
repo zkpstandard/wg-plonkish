@@ -43,28 +43,28 @@ If the proof system is knowledge sound, then the prover must have knowledge of t
 The relation $\mathcal{R}_{\mathsf{plonkish}}$ takes instances of the following form:
 
 | Instance element  | Description |
-| ----------------- | -------- |
+| ----------------- | ----------- |
 | $\mathbb{F}$      | A prime field. |
 | $C$               | The circuit. |
-| $\phi$            | The instance vector $\phi \mathrel{⦂} \mathbb{F}^{C.t}$. |
+| $\phi$            | The instance vector $\phi \mathrel{⦂} \mathbb{F}^{C.t}$ (where $t$ is the instance vector length defined below). |
 
 The circuit $C \mathrel{⦂} \mathsf{AbstractCircuit}_{\mathbb{F}}$ in turn has the following form:
 
-| Circuit element   | Description |
-| ----------------- | -------- |
-| $t$               | Length of the instance vector. |
-| $n > 0$           | Number of rows. |
-| $m > 0$           | Number of columns. |
-| $\equiv$          | An equivalence relation on $[0,m) \times [0,n)$ indicating which witness entries are equal to each other. |
-| $S$               | A set $S \subseteq ([0,m) \times [0,n)) \times [0,t)$ indicating which witness entries are equal to instance vector entries. |
-| $m_f \leq m$      | Number of columns that are fixed. |
-| $f$               | The fixed content of the first $m_f$ columns, $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$. |
-| $p_u$             | Custom multivariate polynomials $p_u \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$. |
-| $\mathsf{CUS}_u$  | Sets $\mathsf{CUS}_u \subseteq [0,n)$ indicating rows on which the custom polynomials $p_u$ are constrained to evaluate to 0. |
-| $L_v$             | Number of table columns in each lookup table $\mathsf{TAB}_v$. |
-| $\mathsf{TAB}_v$  | Lookup tables $\mathsf{TAB}_v \subseteq \mathbb{F}^{L_v}$, each with a number of tuples in $\mathbb{F}^{L_v}$. |
-| $q_{v,s}$         | Scaling multivariate polynomials $q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$. |
-| $\mathsf{LOOK}_v$ | Sets $\mathsf{LOOK}_v \subseteq [0,n)$ indicating rows on which the scaling polynomials $q_{v,s}$ evaluate to some tuple in $\mathsf{TAB}_v$. |
+| Circuit element   | Description | Used in |
+| ----------------- | ----------- | ------- |
+| $t$               | Length of the instance vector. |  |
+| $n > 0$           | Number of rows for the witness matrix. |  |
+| $m > 0$           | Number of columns for the witness matrix. |  |
+| $\equiv$          | An equivalence relation on $[0,m) \times [0,n)$ indicating which witness entries are equal to each other. | [Copy constraints](#copy-constraints) |
+| $S$               | A set $S \subseteq ([0,m) \times [0,n)) \times [0,t)$ indicating which witness entries are equal to instance vector entries. | [Copy constraints](#copy-constraints) |
+| $m_f \leq m$      | Number of columns that are fixed. | [Fixed constraints](#fixed-constraints) |
+| $f$               | The fixed content of the first $m_f$ columns, $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$. | [Fixed constraints](#fixed-constraints) |
+| $p_u$             | Custom multivariate polynomials $p_u \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$. | [Custom constraints](#custom-constraints) |
+| $\mathsf{CUS}_u$  | Sets $\mathsf{CUS}_u \subseteq [0,n)$ indicating rows on which the custom polynomials $p_u$ are constrained to evaluate to 0. | [Custom constraints](#custom-constraints) |
+| $L_v$             | Number of table columns in the lookup table with index $v$, $\mathsf{TAB}_v$. | [Lookup constraints](#lookup-constraints) |
+| $\mathsf{TAB}_v$  | Lookup tables $\mathsf{TAB}_v \subseteq \mathbb{F}^{L_v}$, each with a number of tuples in $\mathbb{F}^{L_v}$. | [Lookup constraints](#lookup-constraints) |
+| $q_{v,s}$         | Scaling multivariate polynomials $q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$. | [Lookup constraints](#lookup-constraints) |
+| $\mathsf{LOOK}_v$ | Sets $\mathsf{LOOK}_v \subseteq [0,n)$ indicating rows on which the scaling polynomials $q_{v,s}$ evaluate to some tuple in $\mathsf{TAB}_v$. | [Lookup constraints](#lookup-constraints) |
 
 Multivariate polynomials are defined below in the [Custom constraints](#custom-constraints) section.
 
