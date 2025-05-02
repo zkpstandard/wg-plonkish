@@ -96,27 +96,101 @@ structure Sat {I W : Type} (R : Rel I W) (x : I) where
   w : W
   satisfied : R x w
 
-structure Refinement (I S T : Type) where
-  source : Rel I S
-  target : Rel I T
+structure Refinement {I I' W W' : Type} (R : Rel I W) (R' : Rel I' W') where
+  trans : I ≃ I'
 
 /-
-A Refinement is Complete iff for all instances x, given a satisfying
+A Refinement is Complete iff for all related instances, given a satisfying
 source witness we can produce a satisfying target witness.
 -/
-def Complete {I S T : Type} (r : Refinement I S T) :=
-  (x : I) → Sat r.source x → Sat r.target x
+def Complete {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') :=
+  (x : I) → Sat R x → Sat R' (r.trans x)
 
 /-
-A Refinement is Sound iff for all instances x, given a satisfying
+A Refinement is Sound iff for all related instances, given a satisfying
 target witness there exists a satisfying source witness.
 -/
-def Sound {I S T : Type} (r : Refinement I S T) :=
-  (x : I) → Sat r.target x → ∃ w : S, r.source x w
+def Sound {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') :=
+  (x' : I') → Sat R' x' → ∃ w : W, R (r.trans.symm x') w
 
 /-
-A Refinement is KnowledgeSound iff for all instances x, given a
+A Refinement is KnowledgeSound iff for all related instances, given a
 satisfying target witness we can produce a satisfying source witness.
 -/
-def KnowledgeSound {I S T : Type} (r : Refinement I S T) :=
-  (x : I) → Sat r.target x → Sat r.source x
+def KnowledgeSound {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') :=
+  (x' : I') → Sat R' x' → Sat R (r.trans.symm x')
+
+theorem knowledge_soundness_implies_soundness {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R')
+  (ks : KnowledgeSound r) : Sound r := by
+  intro x sat'
+  let { w, satisfied } := ks x sat'
+  use w
+
+/-
+What we mean by a correctness-preserving translation `T : AbstractCircuit F → ConcreteCircuit F`
+is that `T` is an efficiently computable function from abstract circuits to concrete circuits,
+such that for any abstract circuit `C` with `C' = T C`:
+
+  * There is a bijective map `trans : I ≃ I'`, efficiently computable in both directions, between
+    abstract instances and concrete instances.
+  * There is an efficient witness translation function `F : W → W'` from abstract witnesses to
+    concrete witnesses.
+  * Completeness is preserved: given a satisfying instance `x` and witness `w` for the abstract circuit
+    `C`, `w' = F w` is a satisfying witness for the concrete circuit `C'` with instance `trans x`.
+  * Knowledge soundness is preserved: given a satisfying instance `x'` and witness `w'` for the
+    concrete circuit `C'`, we can efficiently compute some satisfying witness w for the abstract
+    circuit `C` with instance `trans.symm x'`.
+-/
+structure Correct {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') where
+  complete : Complete r
+  knowledge_sound : KnowledgeSound r
+  sound := knowledge_soundness_implies_soundness r knowledge_sound
+
+/-
+A Bridge joins two refinements with a common relation in the middle. It can be "collapsed" to a
+single refinement.
+-/
+structure Bridge {I I! I' W W! W' : Type} (R : Rel I W) (R! : Rel I! W!) (R' : Rel I' W') where
+  left : Refinement R R!
+  right : Refinement R! R'
+  collapse : Refinement R R' := { trans := Equiv.trans left.trans right.trans }
+
+  compose_trans : collapse.trans = Equiv.trans left.trans right.trans
+  compose_trans_symm : collapse.trans.symm = Equiv.trans right.trans.symm left.trans.symm := by simp_all only; rfl
+
+  complete (lc : Complete left) (rc : Complete right) : Complete collapse :=
+    fun (x : I) (sat : Sat R x) =>
+      let sat' := rc (left.trans x) (lc x sat)
+      { w := sat'.w, satisfied := cast (by rw [compose_trans, Equiv.trans_apply]) sat'.satisfied }
+
+  sound (ls : Sound left) (rs : Sound right) : Sound collapse :=
+    let conclusion (x' : I') (sat' : Sat R' x') : ∃ w : W, R (collapse.trans.symm x') w := by
+      obtain ⟨w!, satisfied!⟩ := rs x' sat'
+      obtain ⟨w, satisfied⟩ := ls (right.trans.symm x') { w := w!, satisfied := satisfied! }
+      use w; simp_all only [Equiv.trans_apply]
+    conclusion
+
+  knowledge_sound (lks : KnowledgeSound left) (rks : KnowledgeSound right) : KnowledgeSound collapse :=
+    fun (x' : I') (sat' : Sat R' x') =>
+      let sat := lks (right.trans.symm x') (rks x' sat')
+      { w := sat.w, satisfied := cast (by rw [compose_trans_symm, Equiv.trans_apply, eq_iff_iff]) sat.satisfied }
+
+  correct (l : Correct left) (r : Correct right) : Correct collapse := {
+    complete := complete l.complete r.complete
+    knowledge_sound := knowledge_sound l.knowledge_sound r.knowledge_sound
+  }
+
+def collapse {I I! I' W W! W' : Type} (R : Rel I W) (R! : Rel I! W!) (R' : Rel I' W')
+  (l : Refinement R R!) (r : Refinement R! R') : Refinement R R' :=
+  let b : Bridge (R : Rel I W) (R! : Rel I! W!) (R' : Rel I' W') := { left := l, right := r, compose_trans := by simp_all only }
+  b.collapse
+
+infixl:60 " ⇛ " => fun {I I! I' W W! W' : Type} {R : Rel I W} {R! : Rel I! W!} {R' : Rel I' W'}
+  (l : Refinement R R!) (r : Refinement R! R') => collapse l r
+
+/-
+instance {I I! I' W W! W' : Type} {R : Rel I W} {R! : Rel I! W!} {R' : Rel I' W'} {left : Refinement R R!} {right : Refinement R! R'} :
+  Trans left right (collapse R R! R' left right) where
+  trans := by
+    sorry
+-/
