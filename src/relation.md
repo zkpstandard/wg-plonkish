@@ -142,6 +142,18 @@ Here $p_u \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ is an arbitrary [mu
 > Given $\eta$ symbols $X_0, \dots, X_{\eta-1}$ called indeterminates, a multivariate polynomial $P$ in these indeterminates, with coefficients in $\mathbb{F}$,
 > is a finite linear combination $$P(X_0, \dots, X_{\eta-1}) = \sum_{z=0}^{\nu-1} \Big(c_z\, {\small\prod_{b=0}^{\eta-1}}\, X_b^{\alpha_{z,b}}\Big)$$ where $\nu \mathrel{⦂} \mathbb{N}$, $c_z \mathrel{⦂} \mathbb{F} \neq 0$, and $\alpha_{z,b} \mathrel{⦂} \mathbb{N}$.
 
+To illustrate the process of adding a custom constraint,
+let us consider the $k$-th polynomial constraint $p_k(X_0, \ldots, X_{m-1}) = 2X_1X_3 - 3X_2^2$.
+We aim to enforce this custom constraint specifically on lines 2 and 5.
+
+This entails adding the following instances:
+- $\mathsf{CUS}_k = \{2, 5\}$
+- $p_k(X_0, \ldots, X_{m-1}) = 2X_1X_3 - 3X_2^2$
+
+This constraint is satisfied if and only if:
+- $p_k(\vec{w}_2) = 2 w[1, 2] w[3, 2] - 3 w[2, 2]^2 = 0$
+- $p_k(\vec{w}_5) = 2 w[1, 5] w[3, 2] - 3 w[2, 5]^2 = 0$
+
 #### Lookup constraints
 
 Lookup constraints enforce that some polynomial function of the witness entries on a row are contained in some table.
@@ -155,3 +167,16 @@ In this specification, we only support fixed lookup tables determined in advance
 | $j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v$ | $v$ is the index of a lookup table. $j$ ranges over the set of rows $\mathsf{LOOK}_v$ <br> for which the lookup constraint is switched on. |
 
 Here $q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$ are multivariate polynomials that collectively map the witness entries $\vec{w}_j$ on the lookup row $j \in \mathsf{LOOK}_v$ to a tuple of field elements. This tuple will be constrained to match some row of the table $\mathsf{TAB}_v$.
+
+Assume that we would like to add the $k$-th lookup constraint.
+To do that, we need to add the instances that define this lookup constraint:
+- Number of columns in the lookup table $L_k = 2$
+- Rows on which the lookup constraint is enforced $\mathsf{LOOK}_k = \{2, 4, 6\}$
+- Multivariate polynomial for the first column $q_{k,0}(X_0, \ldots, X_{m-1}) = X_0 + X_1$
+- Multivariate polynomial for the second column $q_{k,1}(X_0, \ldots, X_{m-1}) = 2X_1X_3 - 3X_2^2$
+- Lookup table $\mathsf{TAB}_k = \{(1, 3), (0, 4), (10, 6)\}$
+
+This lookup constraint is satisfied if and only if:
+- $(q_{k,0}(\vec{w}_2), q_{k,1}(\vec{w}_2)) \in \mathsf{TAB}_k$
+- $(q_{k,0}(\vec{w}_4), q_{k,1}(\vec{w}_4)) \in \mathsf{TAB}_k$
+- $(q_{k,0}(\vec{w}_6), q_{k,1}(\vec{w}_6)) \in \mathsf{TAB}_k$
