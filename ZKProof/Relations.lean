@@ -22,11 +22,12 @@ needs to be proven in a given protocol, and a "circuit relation" elaborating
 this for a particular circuit design, arithmetization, proof system, and choice
 of parameters (fields, curves, etc).
 
-More generally, we are likely to have multiple layers of [`Refinement`] between
-an application relation and a circuit relation. In the context of any given
-refinement, we will talk about a higher-level "source relation" and a
-lower-level "target relation", where we aim to use the latter to implement
-the former.
+More generally, we are likely to have multiple layers of
+[refinement](https://en.wikipedia.org/wiki/Refinement_(computing)) between
+an application relation and a circuit relation. We will represent this as a
+[`Refinement`]. In the context of any given refinement, we will talk about a
+higher-level "source relation" and a lower-level "target relation", where we
+aim to use the latter to implement the former.
 
 What might not be obvious is that security properties like (knowledge)
 soundness and completeness are properties of the *refinements*, not the
@@ -90,35 +91,67 @@ within that system.
 Enough philosophy. A relation will be formalized as a Prop that takes an
 instance and witness as parameters, and holds exactly when the intended
 statement holds.
+
+Previous work:
+
+* [Algebraic Reductions of Knowledge](https://eprint.iacr.org/2022/009) -- this
+  paper describes a notion that generalises refinements by allowing them to be
+  interactive protocols.
 -/
 
-structure Sat {I W : Type} (R : Rel I W) (x : I) where
+/--
+A satisfying witness.
+-/
+structure Satisfying {I W : Type} (R : Rel I W) (x : I) where
+  /-- The witness. -/
   w : W
+  /-- The given relation is satisfied by this witness on the given instance. -/
   satisfied : R x w
 
+/--
+A `Refinement` is a transformation from a more abstract or high-level relation
+into a more concrete or low-level relation, where the two relations have
+equivalent instances.
+
+This is the same sense as a [refinement](https://en.wikipedia.org/wiki/Refinement_(computing))
+from a specification to a concrete program.
+-/
 structure Refinement {I I' W W' : Type} (R : Rel I W) (R' : Rel I' W') where
+  /--
+  An equivalence between the instance types of the source and target relations.
+  Each source instance `x : I` corresponds to a target instance `trans x : I'`.
+  -/
   trans : I ≃ I'
 
-/-
-A Refinement is Complete iff for all related instances, given a satisfying
-source witness we can produce a satisfying target witness.
+/--
+A `Refinement` where source and target instances are the same.
+
+In particular, `SimpleRefinement R R` is the trivial refinement of a relation to itself.
+-/
+def SimpleRefinement {I W W' : Type} (R : Rel I W) (R' : Rel I W') : Refinement R R' :=
+  { trans := Equiv.refl I }
+
+/--
+A [`Refinement`] is `Complete` iff for each source instance, given a satisfying source
+witness we can produce a satisfying target witness for the equivalent target instance.
 -/
 def Complete {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') :=
-  (x : I) → Sat R x → Sat R' (r.trans x)
+  (x : I) → Satisfying R x → Satisfying R' (r.trans x)
 
-/-
-A Refinement is Sound iff for all related instances, given a satisfying
-target witness there exists a satisfying source witness.
+/--
+A [`Refinement`] is `Sound` iff for each target instance, given a satisfying target
+witness there exists a satisfying source witness for the equivalent source instance.
 -/
 def Sound {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') :=
-  (x' : I') → Sat R' x' → ∃ w : W, R (r.trans.symm x') w
+  (x' : I') → Satisfying R' x' → ∃ w : W, R (r.trans.symm x') w
 
-/-
-A Refinement is KnowledgeSound iff for all related instances, given a
-satisfying target witness we can produce a satisfying source witness.
+/--
+A [`Refinement`] is `KnowledgeSound` iff each target instance, given a satisfying
+target witness we can produce a satisfying source witness for the equivalent source
+instance.
 -/
 def KnowledgeSound {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') :=
-  (x' : I') → Sat R' x' → Sat R (r.trans.symm x')
+  (x' : I') → Satisfying R' x' → Satisfying R (r.trans.symm x')
 
 theorem knowledge_soundness_implies_soundness {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R')
   (ks : KnowledgeSound r) : Sound r := by
@@ -126,71 +159,82 @@ theorem knowledge_soundness_implies_soundness {I I' W W' : Type} {R : Rel I W} {
   let { w, satisfied } := ks x sat'
   use w
 
-/-
-What we mean by a correctness-preserving translation `T : AbstractCircuit F → ConcreteCircuit F`
-is that `T` is an efficiently computable function from abstract circuits to concrete circuits,
-such that for any abstract circuit `C` with `C' = T C`:
+inductive Soundness {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R')
+| none
+| sound (p : Sound r)
+| knowledge_sound (p : KnowledgeSound r)
 
-  * There is a bijective map `trans : I ≃ I'`, efficiently computable in both directions, between
-    abstract instances and concrete instances.
-  * There is an efficient witness translation function `F : W → W'` from abstract witnesses to
-    concrete witnesses.
-  * Completeness is preserved: given a satisfying instance `x` and witness `w` for the abstract circuit
-    `C`, `w' = F w` is a satisfying witness for the concrete circuit `C'` with instance `trans x`.
-  * Knowledge soundness is preserved: given a satisfying instance `x'` and witness `w'` for the
-    concrete circuit `C'`, we can efficiently compute some satisfying witness w for the abstract
-    circuit `C` with instance `trans.symm x'`.
--/
-structure Correct {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') where
-  complete : Complete r
-  knowledge_sound : KnowledgeSound r
-  sound := knowledge_soundness_implies_soundness r knowledge_sound
+structure PSound {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') where
+  sound : Sound r
+  dummy := ()
 
-/-
-A Bridge joins two refinements with a common relation in the middle. It can be "collapsed" to a
-single refinement.
+/--
+A `RichRefinement` records whether completeness, soundness, and/or knowledge soundness
+have been proven for a given `Refinement`.
 -/
-structure Bridge {I I! I' W W! W' : Type} (R : Rel I W) (R! : Rel I! W!) (R' : Rel I' W') where
-  left : Refinement R R!
-  right : Refinement R! R'
-  collapse : Refinement R R' := { trans := Equiv.trans left.trans right.trans }
+structure RichRefinement {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') where
+  complete : Option (Complete r)
+  soundness : Soundness r
+  sound : Option (PSound r) := match soundness with
+    | Soundness.none => none
+    | Soundness.sound p => some { sound := p }
+    | Soundness.knowledge_sound ks => some { sound := knowledge_soundness_implies_soundness r ks }
+  knowledge_sound : Option (KnowledgeSound r) := match soundness with
+    | Soundness.none | Soundness.sound _ => none
+    | Soundness.knowledge_sound p => some p
+
+  /--
+  What we mean by a correctness-preserving translation `T : AbstractCircuit F → ConcreteCircuit F`
+  is that `T` is an efficiently computable function from abstract circuits to concrete circuits,
+  such that for any abstract circuit `C` with `C' = T C`:
+
+    * There is a bijective map `trans : I ≃ I'`, efficiently computable in both directions, between
+      abstract instances and concrete instances.
+    * There is an efficient witness translation function `F : W → W'` from abstract witnesses to
+      concrete witnesses.
+    * Completeness is preserved: given a satisfying instance `x` and witness `w` for the abstract circuit
+      `C`, `w' = F w` is a satisfying witness for the concrete circuit `C'` with instance `trans x`.
+    * Knowledge soundness is preserved: given a satisfying instance `x'` and witness `w'` for the
+      concrete circuit `C'`, we can efficiently compute some satisfying witness w for the abstract
+      circuit `C` with instance `trans.symm x'`.
+  -/
+  correct := complete.isSome ∧ knowledge_sound.isSome
+
+/--
+A `Bridge` joins two `Refinement`s with a common relation in the middle. It can be "collapsed"
+to a single `Refinement`.
+
+Note: `Bridge` is low-level infrastructure for composing refinements.
+-/
+structure Bridge {I₁ I₂ I₃ W₁ W₂ W₃ : Type} (R₁ : Rel I₁ W₁) (R₂ : Rel I₂ W₂) (R₃ : Rel I₃ W₃) where
+  left : Refinement R₁ R₂
+  right : Refinement R₂ R₃
+  collapse : Refinement R₁ R₃ := { trans := Equiv.trans left.trans right.trans }
 
   compose_trans : collapse.trans = Equiv.trans left.trans right.trans
   compose_trans_symm : collapse.trans.symm = Equiv.trans right.trans.symm left.trans.symm := by simp_all only; rfl
 
   complete (lc : Complete left) (rc : Complete right) : Complete collapse :=
-    fun (x : I) (sat : Sat R x) =>
-      let sat' := rc (left.trans x) (lc x sat)
-      { w := sat'.w, satisfied := cast (by rw [compose_trans, Equiv.trans_apply]) sat'.satisfied }
+    fun (x₁ : I₁) (sat₁ : Satisfying R₁ x₁) =>
+      let sat₃ := rc (left.trans x₁) (lc x₁ sat₁)
+      { w := sat₃.w, satisfied := cast (by rw [compose_trans, Equiv.trans_apply]) sat₃.satisfied }
 
   sound (ls : Sound left) (rs : Sound right) : Sound collapse :=
-    let conclusion (x' : I') (sat' : Sat R' x') : ∃ w : W, R (collapse.trans.symm x') w := by
-      obtain ⟨w!, satisfied!⟩ := rs x' sat'
-      obtain ⟨w, satisfied⟩ := ls (right.trans.symm x') { w := w!, satisfied := satisfied! }
-      use w; simp_all only [Equiv.trans_apply]
+    let conclusion (x₃ : I₃) (sat₃ : Satisfying R₃ x₃) : ∃ w : W₁, R₁ (collapse.trans.symm x₃) w := by
+      obtain ⟨w₂, satisfied₂⟩ := rs x₃ sat₃
+      obtain ⟨w₁, satisfied₁⟩ := ls (right.trans.symm x₃) { w := w₂, satisfied := satisfied₂ }
+      use w₁; simp_all only [Equiv.trans_apply]
     conclusion
 
   knowledge_sound (lks : KnowledgeSound left) (rks : KnowledgeSound right) : KnowledgeSound collapse :=
-    fun (x' : I') (sat' : Sat R' x') =>
-      let sat := lks (right.trans.symm x') (rks x' sat')
-      { w := sat.w, satisfied := cast (by rw [compose_trans_symm, Equiv.trans_apply, eq_iff_iff]) sat.satisfied }
+    fun (x₃ : I₃) (sat₃ : Satisfying R₃ x₃) =>
+      let sat₁ := lks (right.trans.symm x₃) (rks x₃ sat₃)
+      { w := sat₁.w, satisfied := cast (by rw [compose_trans_symm, Equiv.trans_apply, eq_iff_iff]) sat₁.satisfied }
 
-  correct (l : Correct left) (r : Correct right) : Correct collapse := {
-    complete := complete l.complete r.complete
-    knowledge_sound := knowledge_sound l.knowledge_sound r.knowledge_sound
-  }
 
-def collapse {I I! I' W W! W' : Type} (R : Rel I W) (R! : Rel I! W!) (R' : Rel I' W')
-  (l : Refinement R R!) (r : Refinement R! R') : Refinement R R' :=
-  let b : Bridge (R : Rel I W) (R! : Rel I! W!) (R' : Rel I' W') := { left := l, right := r, compose_trans := by simp_all only }
-  b.collapse
-
-infixl:60 " ⇛ " => fun {I I! I' W W! W' : Type} {R : Rel I W} {R! : Rel I! W!} {R' : Rel I' W'}
-  (l : Refinement R R!) (r : Refinement R! R') => collapse l r
-
-/-
-instance {I I! I' W W! W' : Type} {R : Rel I W} {R! : Rel I! W!} {R' : Rel I' W'} {left : Refinement R R!} {right : Refinement R! R'} :
-  Trans left right (collapse R R! R' left right) where
-  trans := by
-    sorry
--/
+/-- Composition of `Refinement`s using `*`. -/
+instance collapse_hmul {I₁ I₂ I₃ W₁ W₂ W₃ : Type} {R₁ : Rel I₁ W₁} {R₂ : Rel I₂ W₂} {R₃ : Rel I₃ W₃} :
+    HMul (Refinement R₁ R₂) (Refinement R₂ R₃) (Refinement R₁ R₃) where
+  hMul (l : Refinement R₁ R₂) (r : Refinement R₂ R₃) :=
+    let bridge : Bridge (R₁ : Rel I₁ W₁) (R₂ : Rel I₂ W₂) (R₃ : Rel I₃ W₃) := { left := l, right := r, compose_trans := by simp_all only }
+    bridge.collapse
