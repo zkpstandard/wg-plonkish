@@ -154,9 +154,9 @@ def KnowledgeSound {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refine
   (x' : I') → Satisfying R' x' → Satisfying R (r.trans.symm x')
 
 theorem knowledge_soundness_implies_soundness {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R')
-  (ks : KnowledgeSound r) : Sound r := by
-  intro x sat'
-  let { w, satisfied } := ks x sat'
+    (ks : KnowledgeSound r) : Sound r := by
+  intro x' sat'
+  let { w, satisfied } := ks x' sat'
   use w
 
 inductive Soundness {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R')
