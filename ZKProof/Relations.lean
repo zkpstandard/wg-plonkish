@@ -143,12 +143,17 @@ A [`Refinement`] is `Sound` iff for each target instance, given a satisfying tar
 witness there exists a satisfying source witness for the equivalent source instance.
 -/
 def Sound {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') :=
-  (x' : I') → Satisfying R' x' → ∃ w : W, R (r.trans.symm x') w
+  (x' : I') → Satisfying R' x' → Nonempty (Satisfying R (r.trans.symm x'))
 
 /--
 A [`Refinement`] is `KnowledgeSound` iff each target instance, given a satisfying
 target witness we can produce a satisfying source witness for the equivalent source
 instance.
+
+NOTE: Lean is [not fully constructive](https://leanprover.github.io/theorem_proving_in_lean4/axioms_and_computation.html).
+We have to be careful about the meaning of `KnowledgeSound`, since noncomputable
+functions can obtain `KnowledgeSound r` from `Sound r`, as demonstrated by
+[`obtain_knowledgesound_from_sound_noncomputably`].
 -/
 def KnowledgeSound {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'} (r : Refinement R R') :=
   (x' : I') → Satisfying R' x' → Satisfying R (r.trans.symm x')
@@ -220,11 +225,10 @@ structure Bridge {I₁ I₂ I₃ W₁ W₂ W₃ : Type} (R₁ : Rel I₁ W₁) (
       { w := sat₃.w, satisfied := cast (by rw [compose_trans, Equiv.trans_apply]) sat₃.satisfied }
 
   sound (ls : Sound left) (rs : Sound right) : Sound collapse :=
-    let conclusion (x₃ : I₃) (sat₃ : Satisfying R₃ x₃) : ∃ w : W₁, R₁ (collapse.trans.symm x₃) w := by
+    fun (x₃ : I₃) (sat₃ : Satisfying R₃ x₃) => by
       obtain ⟨w₂, satisfied₂⟩ := rs x₃ sat₃
       obtain ⟨w₁, satisfied₁⟩ := ls (right.trans.symm x₃) { w := w₂, satisfied := satisfied₂ }
       use w₁; simp_all only [Equiv.trans_apply]
-    conclusion
 
   knowledge_sound (lks : KnowledgeSound left) (rks : KnowledgeSound right) : KnowledgeSound collapse :=
     fun (x₃ : I₃) (sat₃ : Satisfying R₃ x₃) =>
@@ -238,3 +242,15 @@ instance collapse_hmul {I₁ I₂ I₃ W₁ W₂ W₃ : Type} {R₁ : Rel I₁ W
   hMul (l : Refinement R₁ R₂) (r : Refinement R₂ R₃) :=
     let bridge : Bridge (R₁ : Rel I₁ W₁) (R₂ : Rel I₂ W₂) (R₃ : Rel I₃ W₃) := { left := l, right := r, compose_trans := by simp_all only }
     bridge.collapse
+
+
+open Classical
+
+/--
+We have to be careful about the meaning of `KnowledgeSound`, since a noncomputable
+function can obtain `KnowledgeSound r` from `Sound r`.
+-/
+noncomputable def obtain_knowledgesound_from_sound_noncomputably {I I' W W' : Type} {R : Rel I W} {R' : Rel I' W'}
+    (r : Refinement R R') (s : Sound r) : KnowledgeSound r := by
+  intro x' sat'
+  exact choice (s x' sat')
