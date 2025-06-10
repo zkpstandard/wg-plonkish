@@ -1,6 +1,9 @@
 # Rust
 /target
 
+# Lean
+/.lake
+
 # Editor temporary files
 .*.swp
 *~
