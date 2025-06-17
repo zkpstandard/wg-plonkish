@@ -6,14 +6,14 @@ This page provides a detailed walkthrough of building a Plonk constraint system 
 
 The Luhn algorithm is a check digit formula used to validate identification numbers such as credit card numbers or national identification numbers. It works as follows:
 
-1. Split the number into a payload (all digits except the last one) and a check digit (tthe last digit).
-2. Compute the check digit from the payload.
+1. Split the number into a payload (all digits except the last one) and a given check digit (the last digit).
+2. Compute what the check digit should be from the payload:
 
-   a. Starting from the right (excluding the check digit), double every second digit. If doubling results in a number greater than 9, subtract 9.
+   a. Starting from the right of the payload (which does not include the check digit), double every second digit starting with the rightmost. That is, double the rightmost, third-rightmost, fifth-rightmost, etc. digits of the payload. If doubling results in a number greater than 9, subtract 9.
 
-   b. Sum all the digits (original and transformed).
+   b. Let $s$ be the sum of all the digits (transformed or not) resulting from step a.
 
-   c. The check digit is computed as $(10 - (s \bmod 10)) \bmod 10$ where $s$ is the sum from the previous step.
+   c. The check digit is computed as $(10 - (s \bmod 10)) \bmod 10$.
 
 3. Compare the computed check digit with the given check digit. If they match, the number is valid.
 
@@ -33,7 +33,7 @@ For this account number, the payload is $1389372297$ and the check digit is $8$.
 |    3    |         6         |
 |    1    |         1         |
 
-Sum: $5+9+4+2+5+3+9+8+6+1=52$
+Sum: $s = 5+9+4+2+5+3+9+8+6+1 = 52$
 
 Check digit: $(10 - (52 \bmod 10 )) \bmod 10 = 8$
 
@@ -45,7 +45,7 @@ We will model the Luhn algorithm in a Plonk constraint system. For simplicity, w
 
 ### Instance elements
 
-We work over the prime field $\mathbb{F}_{101}$.
+We work over the prime field $\mathbb{F}_{101}$ (which ensures that $s$ can be represented without overflow).
 
 We have a single instance value ($t=1$): the check digit.
 
