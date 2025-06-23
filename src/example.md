@@ -51,7 +51,7 @@ We have a single instance value ($t=1$): the check digit.
 
 ### Witness matrix
 
-The witness matriw will contain:
+The witness matrix will contain:
 
 - the payload $[a_0, a_1, a_2, a_3, a_4, a_5, a_6, a_7, a_8, a_9]$
 - the transformed digits for every second digit in the payload $[b_1, b_3, b_5, b_7, b_9]$:
@@ -61,8 +61,16 @@ The witness matriw will contain:
   2 \cdot a_{2 \cdot i +1} - 9 & \text{ otherwise}
   \end{cases}
   $$
-- the sum of all digits $s$ (and some intermediate sums $s_0$ and $s_1$)
-- the result of the Eucliean division of $s$ by 10 ($s=10 \cdot q + r$)
+- the sum of all digits $s$ and some intermediate sums $s_0$ and $s_1$. These intermediate sums help optimize the layout of the witness matrix layout.
+$$
+\begin{cases}
+s_0 &= b_1 + a_0 + a_2 + a_4 \\
+s_1 &= b_3 + a_6 + a_8 + s_0 \\
+s &=  b_5 + b_7 + b_9 + s_1 = a_0 + b_1 + a_2 + b_3 + a_4 + b_5 + a_6 + b_7 + a_8 + b_9
+\end{cases}
+$$
+- the quotient $q$ and the remainder $r$ of the Euclidean division of $s$ by 10
+$$s=10 \cdot q + r$$
 - the check digit $c$
 
 Witness matrix layout:
@@ -74,17 +82,7 @@ Witness matrix layout:
 | $a_7$ | $b_7$ | $s$ | $q$ | $r$ | $c$ |
 | $a_9$ | $b_9$ | | | | |
 
-**Explanation of $s_0$ and $s_1$:** These are partial sums to optimize the witness matriw layout:
-
-$$
-\begin{cases}
-s_0 &= b_1 + a_0 + a_2 + a_4 \\
-s_1 &= b_3 + a_6 + a_8 + s_0 \\
-s &=  b_5 + b_7 + b_9 + s_1
-\end{cases}
-$$
-
-**Witness matriw for $13893722978$:**
+**Witness matrix for $13893722978$:**
 Let’s rewrite the witness matrix for the payload $13893722978$
 
 - Payload: $[a_0, a_1, ..., a_9] = [1, 3, 8, 9, 3, 7, 2, 2, 9, 7]$
@@ -143,21 +141,23 @@ We have the following copy constraints
 
 Lookup constraints enforce that some polynomial function of the witness entries on a row are contained in some table.
 
-We enforce that certain cells contain digits (a number between 0 and 9 included):
+Certain cells are constrained to values in the range $[0, 9]$:
 
 - The payload: all $a_i$
 - The transformed digits: all $b_i$
 - The result of the Euclidean division of $s$ by $10$: $q$ and $r$
 
-Those cells are bold in the following witness matrix:
+For duplicated cells such as $s_0$, it is sufficient to constrain only one occurrence.
+
+Those cells are blue in the following witness matrix:
 
 |     $w[0, j]$      |     $w[1, j]$      |     $w[2, j]$      |     $w[3, j]$      |     $w[4, j]$      | $w[5, j]$ |
 | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :-------: |
-| $\boldsymbol{a_1}$ | $\boldsymbol{b_1}$ | $\boldsymbol{a_0}$ | $\boldsymbol{a_2}$ | $\boldsymbol{a_4}$ |   $s_0$   |
-| $\boldsymbol{a_3}$ | $\boldsymbol{b_3}$ | $\boldsymbol{a_6}$ | $\boldsymbol{a_8}$ |       $s_0$        |   $s_1$   |
-| $\boldsymbol{a_5}$ | $\boldsymbol{b_5}$ |       $b_7$        |       $b_9$        |       $s_1$        |    $s$    |
-| $\boldsymbol{a_7}$ | $\boldsymbol{b_7}$ |        $s$         |  $\boldsymbol{q}$  |  $\boldsymbol{r}$  |    $c$    |
-| $\boldsymbol{a_9}$ | $\boldsymbol{b_9}$ |                    |                    |                    |           |
+| $\color{blue} a_1$ | $\color{blue} b_1$ | $\color{blue} a_0$ | $\color{blue} a_2$ | $\color{blue} a_4$ |   $s_0$   |
+| $\color{blue} a_3$ | $\color{blue} b_3$ | $\color{blue} a_6$ | $\color{blue} a_8$ |       $s_0$        |   $s_1$   |
+| $\color{blue} a_5$ | $\color{blue} b_5$ |       $b_7$        |       $b_9$        |       $s_1$        |    $s$    |
+| $\color{blue} a_7$ | $\color{blue} b_7$ |        $s$         |  $\color{blue} q$  |  $\color{blue} r$  |    $c$    |
+| $\color{blue} a_9$ | $\color{blue} b_9$ |                    |                    |                    |           |
 
 More precisely, the lookup constraints are
 
@@ -174,7 +174,7 @@ $$
 **Note:** No lookup constraint is needed for $c$ since:
 
 - It is equal to a public input (copy constraint).
-- By definition $c=10-r$ and $r \in \{0..9\}$. So, $c \in \{0..9\}$.
+- By definition, $c=10-r$ and $r \in [0, 9]$. So, $c \in [0, 9]$.
 
 ## Custom constraints
 
@@ -182,9 +182,9 @@ Custom constraints enforce that witness entries within a row satisfy some multiv
 
 With custom constraints, we enforce that
 
-1. the transformed digits are valid. It means that $\forall i \in [0..4]$, $b_{2 \cdot i +1}$ is equal to either $(2 \cdot a_{2 \cdot i +1})$ or $(2 \cdot a_{2 \cdot i +1}) - 9$. So, $\forall i \in [0..4]$, $(2 \cdot a_{2 \cdot i +1} - b_{2 \cdot i +1}) (2 \cdot a_{2 \cdot i +1} -9 - b_{2\cdot i +1}) = 0$.
+1. The transformed digits are valid. It means that $\forall i \in [0..4]$, $b_{2 \cdot i +1}$ is equal to either $(2 \cdot a_{2 \cdot i +1})$ or $(2 \cdot a_{2 \cdot i +1}) - 9$. So, $$\forall i \in [0..4], (2 \cdot a_{2 \cdot i +1} - b_{2 \cdot i +1}) (2 \cdot a_{2 \cdot i +1} -9 - b_{2\cdot i +1}) = 0$$
 
-**Custom constraint for transformed digits:**
+Thus, the custom constraint for transformed digits is:
 
 $$
 \begin{cases}
@@ -193,7 +193,7 @@ CUS_0 = \{0..4\}
 \end{cases}
 $$
 
-2. the sums are valid
+2. The sums are valid
 
 $$
 \begin{cases}
@@ -203,7 +203,7 @@ s &=  b_5 + b_7 + b_9 + s_1
 \end{cases}
 $$
 
-**Custom constraint for sums:**
+Thus, the custom constraint for sums is:
 
 $$
 \begin{cases}
@@ -212,9 +212,9 @@ CUS_1 = \{0..2\}
 \end{cases}
 $$
 
-3. the Euclidean division is correct $s = 10 \cdot q + r$
+3. The Euclidean division is correct $s = 10 \cdot q + r$.
 
-**Custom constraint for Euclidean division:**
+Thus, the custom constraint for Euclidean division is:
 
 $$
 \begin{cases}
@@ -223,9 +223,9 @@ CUS_2 = \{3\}
 \end{cases}
 $$
 
-4. the computed check digit is correct: $c=10-r$
+4. The computed check digit is correct: $c=10-r$.
 
-**Custom constraint for check digit:**
+Thus, the custom constraint for check digit is:
 
 $$
 \begin{cases}
