@@ -39,7 +39,6 @@ structure AbstractCircuit where
   Equivalence_E : Equivalence E
 
   /-- Where each instance vector entry corresponds to in the witness matrix. -/
-  -- The doc uses `Set (Location m n × Fin t)` but this is cleaner.
   S : Vector (Location m n) t
 
   /-- The number of columns that are fixed. -/
