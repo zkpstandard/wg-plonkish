@@ -78,27 +78,27 @@ If the proof system is knowledge sound, then the prover must have knowledge of t
 ## Instances
 The relation `R_plonkish` takes instances of the following form:
 
-| Instance element | Description                                                                               |
-| ---------------- | ----------------------------------------------------------------------------------------- |
-| `Fp`               | A prime field.                                                                            |
-| `C`                | The circuit.                                                                              |
-| `phi`              | The instance vector `phi : Fp^(C.t)` (where `t` is the instance vector length defined below). |
+| Instance element | Description                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `Fp`             | A prime field.                                                                                |
+| `C`              | The circuit.                                                                                  |
+| `phi`            | The instance vector `phi : Fp^(C.t)` (where `t` is the instance vector length defined below). |
 
 The circuit `C : AbstractCircuit_Fp` in turn has the following form:
 
-| Circuit element | Description                                                                                                        | Used in                                   |
-| --------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| `t`               | Length of the instance vector.                                                                                     |                                           |
-| `n > 0`           | Number of rows for the witness matrix.                                                                             |                                           |
-| `m > 0`           | Number of columns for the witness matrix.                                                                          |                                           |
-| `≡`           | An equivalence relation on `[0,m) x [0,n)`, indicating which witness entries are equal to each other.              | [Copy constraints](#copy-constraints)     |
-| `S`               | A set `S ⊆ ([0,m) x [0,n)) x [0,t)`, indicating which witness entries are equal to instance vector entries.       | [Copy constraints](#copy-constraints)     |
-| `m_f <= m`       | Number of columns that are fixed.                                                                                  | [Fixed constraints](#fixed-constraints)   |
-| `f`               | The fixed content of the first `m_f` columns, `f : Fp^(m_f x n)`.                                                    | [Fixed constraints](#fixed-constraints)   |
-| `p_u`            | Custom multivariate polynomials `p_u : Fp^m -> Fp`.                                                                 | [Custom constraints](#custom-constraints) |
-| `CUS_u`          | Sets `CUS_u ⊆ [0,n)`, indicating rows on which the custom polynomials `p_u` are constrained to evaluate to `0`.       | [Custom constraints](#custom-constraints) |
-| `L_v`            | Number of table columns in the lookup table with index `v, TAB_v`.                                                  | [Lookup constraints](#lookup-constraints) |
-| `TAB_v`          | Lookup tables `TAB_v ⊆ Fp^{L_v}`, each with a number of tuples in `Fp^{L_v}`.                                           | [Lookup constraints](#lookup-constraints) |
+| Circuit element  | Description                                                                                                          | Used in                                   |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `t`              | Length of the instance vector.                                                                                       |                                           |
+| `n > 0`          | Number of rows for the witness matrix.                                                                               |                                           |
+| `m > 0`          | Number of columns for the witness matrix.                                                                            |                                           |
+| `≡`              | An equivalence relation on `[0,m) x [0,n)`, indicating which witness entries are equal to each other.                | [Copy constraints](#copy-constraints)     |
+| `S`              | A set `S ⊆ ([0,m) x [0,n)) x [0,t)`, indicating which witness entries are equal to instance vector entries.          | [Copy constraints](#copy-constraints)     |
+| `m_f <= m`       | Number of columns that are fixed.                                                                                    | [Fixed constraints](#fixed-constraints)   |
+| `f`              | The fixed content of the first `m_f` columns, `f : Fp^(m_f x n)`.                                                    | [Fixed constraints](#fixed-constraints)   |
+| `p_u`            | Custom multivariate polynomials `p_u : Fp^m -> Fp`.                                                                  | [Custom constraints](#custom-constraints) |
+| `CUS_u`          | Sets `CUS_u ⊆ [0,n)`, indicating rows on which the custom polynomials `p_u` are constrained to evaluate to `0`.      | [Custom constraints](#custom-constraints) |
+| `L_v`            | Number of table columns in the lookup table with index `v, TAB_v`.                                                   | [Lookup constraints](#lookup-constraints) |
+| `TAB_v`          | Lookup tables `TAB_v ⊆ Fp^{L_v}`, each with a number of tuples in `Fp^{L_v}`.                                        | [Lookup constraints](#lookup-constraints) |
 | `q_{v,s}`        | Scaling multivariate polynomials `q_{v,s} : Fp^m -> Fp` for `s in 0..L_v`.                                           | [Lookup constraints](#lookup-constraints) |
 | `LOOK_v`         | Sets `LOOK_v ⊆ [0,n)`, indicating rows on which the scaling polynomials `q_{v,s}` evaluate to some tuple in `TAB_v`. | [Lookup constraints](#lookup-constraints) |
 
@@ -107,9 +107,9 @@ The circuit `C : AbstractCircuit_Fp` in turn has the following form:
 
 The relation `R_plonkish` takes witnesses of the following form:
 
-| Witness element   | Description |
-| ----------------- | -------- |
-| `w`               | The witness matrix `w : Fp^(m x n)`. |
+| Witness element  | Description                          |
+| ---------------- | ------------------------------------ |
+| `w`              | The witness matrix `w : Fp^(m x n)`. |
 
 Define `w_j` as the row vector `[ w[i, j] : i <- 0..m ]`.
 
@@ -129,13 +129,13 @@ Given the above definitions, the relation `R_plonkish` corresponds to a set of (
 
 such that:
 
-| Domains | Constraints |
-|----------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
-| `w : Fp^(m × n)`, `f : Fp^(m_f × n)`                                                        | `i in [0, m_f), j in [0, n) => w[i, j] = f[i, j]`|
-| `S ⊆ ([0, m) x [0, n)) x [0, t)`, `phi : Fp^t`                                              | `((i, j), k) in S => w[i, j] = phi[k]`|
-| `≡ ⊆ ([0, m) x [0, n)) x ([0, m) × [0, n))`                                            | `(i, j) ≡ (k, l) => w[i, j] = w[k, l]`|
-| `CUS_u ⊆ [0, n)`, `p_u : Fp^m -> Fp`                                                        | `j in CUS_u => p_u(w_j) = 0`|
-| `LOOK_v ⊆ [0, n)`, `q_{v,s} : Fp^m -> Fp`, `TAB_v ⊆ Fp^{L_v}`                              | `j in LOOK_v => [ q_{v,s}(w_j) : s <- 0..L_v ] in TAB_v`|
+| Domains                                                                | Constraints                                              |
+| -----------------------------------------------------------------------| -------------------------------------------------------- |
+| `w : Fp^(m × n)`, `f : Fp^(m_f × n)`                                   | `i in [0, m_f), j in [0, n) => w[i, j] = f[i, j]`        |
+| `S ⊆ ([0, m) x [0, n)) x [0, t)`, `phi : Fp^t`                         | `((i, j), k) in S => w[i, j] = phi[k]`                   |
+| `≡ ⊆ ([0, m) x [0, n)) x ([0, m) × [0, n))`                            | `(i, j) ≡ (k, l) => w[i, j] = w[k, l]`                   |
+| `CUS_u ⊆ [0, n)`, `p_u : Fp^m -> Fp`                                   | `j in CUS_u => p_u(w_j) = 0`                             |
+| `LOOK_v ⊆ [0, n)`, `q_{v,s} : Fp^m -> Fp`, `TAB_v ⊆ Fp^{L_v}`          | `j in LOOK_v => [ q_{v,s}(w_j) : s <- 0..L_v ] in TAB_v` |
 
 In this model, a circuit-specific relation `R_{Fp, C}` for a field `Fp` and circuit `C` is the relation `R_plonkish` restricted to `( (Fp, C, phi : Fp^C.t), w : Fp^(C.m × C.n))`
 
@@ -156,10 +156,10 @@ The first `m_f` columns of `w` are fixed to the columns of `f`.
 
 Copy constraints enforce that entries in the witness matrix are equal to each other, or that an instance entry is equal to a witness entry.
 
-| Copy Constraints  | Description |
-| ----------------- | -------- |
-| `((i,j),k) in S => w[i, j] = phi[k]` | The `(i,j)` advice entry is equal to the `k` instance entry for all `((i,j),k) in S`. |
-| `(i,j) ≡ (k,l) => w[i, j] = w[k, l]` | `≡` is an equivalence relation indicating which witness entries are constrained to be equal. |
+| Copy Constraints                     | Description                                                                                                     |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `((i,j),k) in S => w[i, j] = phi[k]` | The `(i,j)` advice entry is equal to the `k` instance entry for all `((i,j),k) in S`.                           |
+| `(i,j) ≡ (k,l) => w[i, j] = w[k, l]` | `≡` is an equivalence relation indicating which witness entries are constrained to be equal.                    |
 
 By convention, when fixed abstract cells have the same value, we consider them to be equivalent under `≡`. That is, if `i < m_f && k < m_f && f[i, j] = f[k, l]` then `(i, j) ≡ (k, l)`.
 
@@ -173,13 +173,13 @@ In some systems using Plonkish, custom constraints are referred to as "gates".
 
 Custom constraints enforce that witness entries within a row satisfy some multivariate polynomial. Here `p_u` could indicate any case that can be generated using a combination of multiplications and additions.
 
-| Custom Constraints | Description |
-| -------- | -------- | 
-| `j in CUS_u => p_u(w_j) = 0` | `u` is the index of a custom constraint. `j` ranges over the set of rows `CUS_u` for which the custom constraint is switched on. |
+| Custom Constraints                   | Description                                                                                                                      |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `j in CUS_u => p_u(w_j) = 0`         | `u` is the index of a custom constraint. `j` ranges over the set of rows `CUS_u` for which the custom constraint is switched on. |
 
 Here `p_u : Fp^m -> Fp` is an arbitrary [multivariate polynomial](https://en.wikipedia.org/wiki/Polynomial_ring#Definition_(multivariate_case)):
 
-> Given `η` symbols `X_0, ..., X_{η−1}` called indeterminates, a multivariate polynomial `P` in these indeterminates with coefficients in `Fp` is a finite linear combination: 
+> Given `η` symbols `X_0, ..., X_{η−1}` called indeterminates, a multivariate polynomial `P` in these indeterminates with coefficients in `Fp` is a finite linear combination:
 >
 > `P(X_0, ..., X_{η−1}) = Σ_{z=0}^{ν−1} (c_z · Π_{b=0}^{η−1} X_b^{α_{z,b}})`  
 >
@@ -193,9 +193,9 @@ The sizes of tables are not limited at this layer. A realization of a proving sy
 
 In this specification, we only support fixed lookup tables determined in advance. This could be generalized to support dynamic tables determined by part of the witness matrix.
 
-| Lookup Constraints | Description |
-| -------- | -------- |
-| `j in LOOK_v => [ q_{v,s}(w_j) : s <- 0 .. L_v ] in TAB_v` | `v` is the index of a lookup table. `j` ranges over the set of rows `LOOK_v` for which the lookup constraint is switched on. |
+| Lookup Constraints                                       | Description                                                                                                                  |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `j in LOOK_v => [ q_{v,s}(w_j) : s <- 0..L_v ] in TAB_v` | `v` is the index of a lookup table. `j` ranges over the set of rows `LOOK_v` for which the lookup constraint is switched on. |
 
 Here `q_{v,s} : Fp^m -> Fp` for `s <- 0 .. L_v` are multivariate polynomials that collectively map the witness entries `w_j` on the lookup row `j in LOOK_v` to a tuple of field elements. This tuple will be constrained to match some row of the table `TAB_v`.
 
