@@ -99,7 +99,7 @@ structure R (φ : C.Instance) (w : C.Witness) where
   /-- Semantics of copy constraints for inputs. -/
   input (k : Fin C.t) : w C.S[k] = φ[k]
   /-- Semantics of copy constraints for witness entries. -/
-  equal (e e' : C.Entry) : w e = w e'
+  equal (e e' : C.Entry) (equated : C.E e e') : w e = w e'
 
   /-- Semantics of custom constraints. -/
   custom (u : Fin C.U) (j : C.CUS u) : C.row_eval F w j (C.p u) = 0 := by intro u; exact Fin.elim0 u
@@ -177,7 +177,7 @@ theorem dt_knowledge_sound_direct (x c a : F)
 by
   obtain ⟨ fixed, input, equal ⟩ := stmt; simp at fixed
   have hx_a : x = a  := by let hx := input (0 : Fin 1); subst hx; rfl
-  have ha_c : a = c  := by let ha_c := equal dt_a dt_c; simp [dt_a, dt_c, dt_witness, dt_entry, entry] at ha_c; exact ha_c
+  have ha_c : a = c  := by let ha_c := equal dt_a dt_c; simp [dt, dt_witness, dt_a, dt_c, dt_entry, entry] at ha_c; exact ha_c
   have hc   : c = 42 := by let hc := fixed dt_c <| show dt_c.i < (dt F).m_f by simp [dt, dt_c, dt_entry, entry];
                            simp [dt_c, dt_witness, dt_entry, entry] at hc; exact hc
   simp_all
@@ -221,7 +221,7 @@ def dt_knowledge_sound_by_refinement : KnowledgeSound (dt_refinement F) :=
       obtain ⟨ fixed, input, equal ⟩ := sat'.satisfied
       let hc := fixed dt_c <| show dt_c.i < (dt F).m_f by simp [dt, dt_c, dt_entry, entry];
       have hx_a : x = a := by let hx := input (0 : Fin 1); simp [dt, dt_a, dt_entry, entry] at hx; simp [a]; exact hx.symm
-      have ha_c : a = c := by let ha_c := equal dt_a dt_c; simp [dt_witness, dt_a, dt_c, dt_entry, entry] at ha_c; exact ha_c
+      have ha_c : a = c := by let ha_c := equal dt_a dt_c; simp [dt, dt_witness, dt_a, dt_c, dt_entry, entry] at ha_c; exact ha_c
       have c_42 : c = 42 := by simp [dt_witness, dt_c, dt_entry, entry] at hc; exact hc
       simp_all
       exact hx_a
