@@ -29,7 +29,7 @@ $$
 \begin{array}{rcl}
 && i < m_f \\
 \exists (k, \ell) \neq (i, j) &:& (i, j) \equiv (k, \ell) \\
-\exists k &:& ((i, j), k) \in S \\
+\exists k &:& S[k] = (i, j) \\
 \exists u &:& j \in \mathsf{CUS}_u \text{ and } w[i, j] \text{ ``might be used'' in } p_u(\vec{w}_j) \\
 \exists v, s &:& j \in \mathsf{LOOK}_v \text{ and } w[i, j] \text{ ``might be used'' in } q_{v,s}(\vec{w}_j),
 \end{array}
@@ -223,7 +223,7 @@ For condition 1, we have $\forall (x, w) \in \mathcal{R}_{\mathsf{plonkish}}$, w
 $$
 \begin{array}{ll|l}
    w \mathrel{⦂} \mathbb{F}^{m \times n}, \ f \mathrel{⦂} \mathbb{F}^{m_f \times n} & & i \in [0,m_f), \ j \in [0,n) \Rightarrow w[i, j] = f[i, j] \\[0.3ex]
-   S \subseteq ([0,m) \times [0,n)) \times [0,t), \ \phi \mathrel{⦂} \mathbb{F}^t & & ((i,j),k) \in S \Rightarrow w[i, j] = \phi[k] \\[0.3ex]
+   S \mathrel{⦂} ([0,m) \times [0,n))^t, \ \phi \mathrel{⦂} \mathbb{F}^t & & k \in [0,t) \Rightarrow w[S[k]] = \phi[k] \\[0.3ex]
    \equiv\; \subseteq ([0,m) \times [0,n)) \times ([0,m) \times [0,n)) & & (i,j) \equiv (k,\ell) \Rightarrow w[i, j] = w[k, \ell] \\[0.3ex]
    \mathsf{CUS}_u \subseteq [0,n), \ p_u \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F} & & j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0 \\[0.3ex]
    \mathsf{LOOK}_v \subseteq [0,n), \ q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
@@ -234,7 +234,7 @@ We must prove that this implies $(x, \mathcal{F}(w)) \in \mathcal{R}_{\mathsf{co
 $$
 \begin{array}{ll|l}
    w' \mathrel{⦂} \mathbb{F}^{m' \times n'}, \ f' \mathrel{⦂} \mathbb{F}^{m'_f \times n'} & & i' \in [0,m'_f), \ j' \in [0,n') \Rightarrow w'[i', j'] = f[i', j'] \\[0.3ex]
-   S' \subseteq ([0,m') \times [0,n')) \times [0,t), \ \phi \mathrel{⦂} \mathbb{F}^t & & ((i',j'),k) \in S' \Rightarrow w'[i', j'] = \phi[k] \\[0.3ex]
+   S' \mathrel{⦂} ([0,m') \times [0,n'))^t, \ \phi \mathrel{⦂} \mathbb{F}^t & & k \in [0,t) \Rightarrow w'[S'[k]] = \phi[k] \\[0.3ex]
    \equiv'\; \subseteq ([0,m') \times [0,n')) \times ([0,m') \times [0,n')) & & (i',j') \equiv (k',\ell') \Rightarrow w'[i', j'] = w'[k', \ell'] \\[0.3ex]
    \mathsf{CUS}'_u \subseteq [0,n'), \ p'_u \mathrel{⦂} \mathbb{F}^{m'} \rightarrow \mathbb{F} & & j' \in \mathsf{CUS}'_u \Rightarrow p'_u(\vec{w}'_{j'}) = 0 \\[0.3ex]
    \mathsf{LOOK}'_v \subseteq [0,n'), \ q'_{v,s} \mathrel{⦂} \mathbb{F}^{m'} \rightarrow \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j' \in \mathsf{LOOK}'_v \Rightarrow \big[\, q'_{v,s}(\vec{w}'_{j'}) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
@@ -245,7 +245,7 @@ For condition 2, the abstract witness $w$ that we find will be $\mathcal{F}'(x')
 
 Given the definitions from [above](#constraint-translations), it is straightforward to see that in the statements to be proven for both conditions:
 
-* the concrete fixed constraints for concrete cells $((i',j'),k) \in S'$ are in one-to-one correspondence with equivalent abstract fixed constraints for abstract cells $((i,j),k) \in S$;
+* the concrete fixed constraints for concrete cells $S'[k]$, $k \in [0,t)$ are in one-to-one correspondence with equivalent abstract fixed constraints for abstract cells $S[k]$, $k \in [0,t)$;
 * the concrete copy constraints for concrete cells $(i',j') \equiv' (k',\ell')$ are in one-to-one correspondence with equivalent abstract copy constraints for abstract cells $(i,j) \equiv (k,\ell)$;
 * the concrete custom constraints for concrete rows $j' \in \mathsf{CUS}'_u$, are in one-to-one correspondence with equivalent abstract custom constraints for abstract rows $j \in \mathsf{CUS}_u$;
 * the concrete lookup constraints for concrete rows $j' \in \mathsf{LOOK}'_v$, are in one-to-one correspondence with equivalent abstract lookup constraints for abstract rows $j \in \mathsf{LOOK}_v$.

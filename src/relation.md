@@ -56,7 +56,7 @@ The circuit $C \mathrel{⦂} \mathsf{AbstractCircuit}_{\mathbb{F}}$ in turn has 
 | $n > 0$           | Number of rows for the witness matrix. |  |
 | $m > 0$           | Number of columns for the witness matrix. |  |
 | $\equiv$          | An equivalence relation on $[0,m) \times [0,n)$ indicating which witness entries are equal to each other. | [Copy constraints](#copy-constraints) |
-| $S$               | A set $S \subseteq ([0,m) \times [0,n)) \times [0,t)$ indicating which witness entries are equal to instance vector entries. | [Copy constraints](#copy-constraints) |
+| $S$               | A vector $S \mathrel{⦂} ([0,m) \times [0,n))^t$ indicating witness entries to be constrained to match the instance vector. | [Copy constraints](#copy-constraints) |
 | $m_f \leq m$      | Number of columns that are fixed. | [Fixed constraints](#fixed-constraints) |
 | $f$               | The fixed content of the first $m_f$ columns, $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$. | [Fixed constraints](#fixed-constraints) |
 | $p_u$             | Custom multivariate polynomials $p_u \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$. | [Custom constraints](#custom-constraints) |
@@ -88,7 +88,7 @@ such that:
 $$
 \begin{array}{ll|l}
    w \mathrel{⦂} \mathbb{F}^{m \times n}, \ f \mathrel{⦂} \mathbb{F}^{m_f \times n} & & i \in [0,m_f), \ j \in [0,n) \Rightarrow w[i, j] = f[i, j] \\[0.3ex]
-   S \subseteq ([0,m) \times [0,n)) \times [0,t), \ \phi \mathrel{⦂} \mathbb{F}^t & & ((i,j),k) \in S \Rightarrow w[i, j] = \phi[k] \\[0.3ex]
+   S \mathrel{⦂} ([0,m) \times [0,n))^t, \ \phi \mathrel{⦂} \mathbb{F}^t & & k \in [0,t) \Rightarrow w[S[k]] = \phi[k] \\[0.3ex]
    \equiv\; \subseteq ([0,m) \times [0,n)) \times ([0,m) \times [0,n)) & & (i,j) \equiv (k,\ell) \Rightarrow w[i, j] = w[k, \ell] \\[0.3ex]
    \mathsf{CUS}_u \subseteq [0,n), \ p_u \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F} & & j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0 \\[0.3ex]
    \mathsf{LOOK}_v \subseteq [0,n), \ q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
@@ -116,7 +116,7 @@ Copy constraints enforce that entries in the witness matrix are equal to each ot
 
 | Copy Constraints  | Description |
 | ----------------- | -------- |
-| $((i,j),k) \in S \Rightarrow w[i, j] = \phi[k]$ | The $(i,j)$ th advice entry is equal to the $k$ th instance entry for all $((i,j),k) \in S$. |
+| $k \in [0,t) \Rightarrow w[S[k]] = \phi[k]$ | The $(i,j)$ advice entry is equal to the $k$ instance entry for $S[k] = (i,j)$. |
 | $(i,j) \equiv (k,\ell) \Rightarrow w[i, j] = w[k, \ell]$ | $\equiv$ is an equivalence relation indicating which witness entries are constrained to be equal. |
 
 By convention, when fixed abstract cells have the same value, we consider them to be equivalent under $\equiv$. That is,
