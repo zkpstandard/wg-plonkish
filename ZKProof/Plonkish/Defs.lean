@@ -44,14 +44,14 @@ structure AbstractCircuit where
   /-- The number of columns that are fixed. -/
   m_f : Fin (m+1)
   /-- The fixed content of the first `m_f` columns. -/
-  f (e : Location m n) (fixed_col : e.i < m_f) : F
+  f (e : Location m n) (is_fixed_col : e.i < m_f) : F
 
   /-- The number of custom gates. The default is 0, in which case `p` and `CUS` need not be provided. -/
   U : ℕ := 0
   /-- Multivariate polynomials for custom gates. -/
-  p : Fin U → MvPolynomial (Fin m) F := by intro u; exact Fin.elim0 u
+  p (u : Fin U) : MvPolynomial (Fin m) F := by intro u; exact Fin.elim0 u
   /-- Rows on which the custom polynomials `p u` are constrained to evaluate to 0. -/
-  CUS : Fin U → Set (Fin n) := by intro u; exact Fin.elim0 u
+  CUS (u : Fin U) : Set (Fin n) := by intro u; exact Fin.elim0 u
 
   /-- The number of lookup tables. The default is 0, in which case `L`, `TAB`, `q` and `LOOK` need not be provided. -/
   V : ℕ := 0
@@ -80,8 +80,8 @@ abbrev Witness := C.Entry → F
 abbrev Relation := Rel C.Instance C.Witness
 
 /-- `row_vec w j : Fin m → F` is the witness vector for row `j`. -/
-def row_vec (w : C.Witness) (j : Fin C.n) (i : Fin C.m) :=
-  w { i := i, j := j }
+def row_vec (w : C.Witness) (j : Fin C.n) :=
+  fun (i : Fin C.m) => w { i := i, j := j }
 
 /-- Evaluate a polynomial on the witness vector for a given row. -/
 def row_eval (w : C.Witness) (j : Fin C.n) (poly : MvPolynomial (Fin C.m) F) :=
@@ -93,19 +93,18 @@ We define this as a structure rather than a monolithic `Prop`, to more easily al
 referring to its parts. Lean's type system still allows it to be used as a `Prop`.
 -/
 structure R (φ : C.Instance) (w : C.Witness) where
-  /-- Fixed constraints. -/
-  fixed (e : Location C.m C.n) (fixed_col : e.i < C.m_f) : w e = C.f e fixed_col
+  /-- Semantics of fixed constraints. -/
+  fixed (e : C.Entry) (is_fixed_col : e.i < C.m_f) : w e = C.f e is_fixed_col
 
-  /-- Input constraints. -/
+  /-- Semantics of copy constraints for inputs. -/
   input (k : Fin C.t) : w C.S[k] = φ[k]
-
-  /-- Equality constraints. -/
+  /-- Semantics of copy constraints for witness entries. -/
   equal (e e' : C.Entry) : w e = w e'
 
-  /-- Custom constraints. -/
+  /-- Semantics of custom constraints. -/
   custom (u : Fin C.U) (j : C.CUS u) : C.row_eval F w j (C.p u) = 0 := by intro u; exact Fin.elim0 u
 
-  /-- Lookup constraints. -/
+  /-- Semantics of lookup constraints. -/
   lookup (v : Fin C.V) (j : C.LOOK v) : (C.q v).map (C.row_eval F w j) ∈ C.TAB v := by intro v; exact Fin.elim0 v
 
 end AbstractCircuit
@@ -232,7 +231,7 @@ end Example
 
 /-- Not sure whether this kind of lemma is useful yet. -/
 lemma check_constant (C : AbstractCircuit F) (x' : C.Instance) (sat' : Satisfying C.R x')
-    (e : Location C.m C.n) (fixed_col : e.i < C.m_f)
-    : sat'.w e = C.f e fixed_col := by
+    (e : Location C.m C.n) (is_fixed_col : e.i < C.m_f)
+    : sat'.w e = C.f e is_fixed_col := by
   obtain ⟨ fixed ⟩ := sat'.satisfied
-  rw [fixed e fixed_col]
+  rw [fixed e is_fixed_col]
