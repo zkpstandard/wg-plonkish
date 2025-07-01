@@ -36,7 +36,7 @@ structure AbstractCircuit where
   E (e e' : Location m n) : Prop
   Equivalence_E : Equivalence E
 
-  /-- Where each instance vector entry corresponds to in the witness matrix. -/
+  /-- A vector mapping each instance vector entry to an entry in the witness matrix that it is constrained equal to. -/
   S : Vector (Location m n) t
 
   /-- The number of columns that are fixed. -/
@@ -94,7 +94,7 @@ structure R (φ : C.Instance) (w : C.Witness) where
   /-- Semantics of fixed constraints. -/
   fixed (e : C.Entry) (is_fixed_col : e.i < C.m_f) : w e = C.f e is_fixed_col
 
-  /-- Semantics of copy constraints for inputs. -/
+  /-- Semantics of copy constraints for instance entries. -/
   input (k : Fin C.t) : w C.S[k] = φ[k]
   /-- Semantics of copy constraints for witness entries. -/
   equal (e e' : C.Entry) (equated : C.E e e') : w e = w e'
