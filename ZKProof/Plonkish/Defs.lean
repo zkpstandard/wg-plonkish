@@ -12,7 +12,7 @@ variable (F : Type) [Field F]
 
 
 /-- The location of a witness entry. -/
-structure Location (m n : ℕ) where
+structure Location (m n : ℕ+) where
   /-- Column number. -/
   i : Fin m
   /-- Row number. -/
@@ -20,7 +20,7 @@ structure Location (m n : ℕ) where
 deriving DecidableEq
 
 /-- Utility function to construct a `Location`. -/
-def entry {m n : ℕ} (i : Fin m) (j : Fin n) : Location m n := { i := i, j := j }
+def entry {m n : ℕ+} (i : Fin m) (j : Fin n) : Location m n := { i := i, j := j }
 
 /-- An abstract Plonkish circuit. -/
 structure AbstractCircuit where
@@ -28,11 +28,9 @@ structure AbstractCircuit where
   t : ℕ
 
   /-- Number of columns for the witness matrix. -/
-  m : ℕ
-  m_pos : m > 0 := by simp
+  m : ℕ+
   /-- Number of rows for the witness matrix. -/
-  n : ℕ
-  n_pos : n > 0 := by simp
+  n : ℕ+
 
   /-- An equivalence relation on witness entries. -/
   E (e e' : Location m n) : Prop
@@ -56,7 +54,7 @@ structure AbstractCircuit where
   /-- The number of lookup tables. The default is 0, in which case `L`, `TAB`, `q` and `LOOK` need not be provided. -/
   V : ℕ := 0
   /-- The number of table columns in the lookup table with index `v`, `TAB v`. -/
-  L (v : Fin V) : ℕ := by intro v; exact Fin.elim0 v
+  L (v : Fin V) : ℕ+ := by intro v; exact Fin.elim0 v
   /-- Lookup tables `TAB v`, each with a number of tuples in `F^{L v}`. -/
   TAB (v : Fin V) : Set (Vector F (L v)) := by intro v; exact Fin.elim0 v
   /-- Scaling multivariate polynomials for lookup tables. -/
@@ -121,7 +119,7 @@ This demonstrates fixed, input, and equality constraints, but not custom gates o
 | c = 42 | a = x₀ |
 -/
 
-def dt_entry (i : Fin 2) (j : Fin 1) := entry i j
+def dt_entry (i : Fin (2 : ℕ+)) (j : Fin (1 : ℕ+)) := entry i j
 def dt_a := dt_entry 1 0
 def dt_c := dt_entry 0 0
 
