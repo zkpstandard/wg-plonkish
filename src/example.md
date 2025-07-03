@@ -69,7 +69,7 @@ s_1 &= b_3 + a_6 + a_8 + s_0 \\
 s &=  b_5 + b_7 + b_9 + s_1 = a_0 + b_1 + a_2 + b_3 + a_4 + b_5 + a_6 + b_7 + a_8 + b_9
 \end{cases}
 $$
-- the quotient $q$ and the remainder $r$ of the Euclidean division of $s$ by 10
+- the quotient $q$ and the remainder $r$ of the division of $s$ by 10
 $$s=10 \cdot q + r$$
 - the check digit $c$
 
@@ -104,7 +104,7 @@ Let’s rewrite the witness matrix for the payload $13893722978$
   s = 5+4+5+38 = 52
   \end{cases}
   $$
-- Euclidean division of $s$ by $10$
+- The division of $s$ by $10$
   $$
   s = 10 \cdot q + r \text{ with } \begin{cases}
   s=52 \\
@@ -141,11 +141,11 @@ We have the following copy constraints
 
 Lookup constraints enforce that some polynomial function of the witness entries on a row are contained in some table.
 
-Certain cells are constrained to values in the range $[0, 9]$:
+Some cells are constrained to values in the range $[0, 9]$:
 
 - The payload: all $a_i$
 - The transformed digits: all $b_i$
-- The result of the Euclidean division of $s$ by $10$: $q$ and $r$
+- The quotient $q$ and the remainder $r$ of the division of $s$ by $10$
 
 For duplicated cells such as $s_0$, it is sufficient to constrain only one occurrence.
 
@@ -183,6 +183,7 @@ Custom constraints enforce that witness entries within a row satisfy some multiv
 With custom constraints, we enforce that
 
 1. The transformed digits are valid. It means that $\forall i \in [0..4]$, $b_{2 \cdot i +1}$ is equal to either $(2 \cdot a_{2 \cdot i +1})$ or $(2 \cdot a_{2 \cdot i +1}) - 9$. So, $$\forall i \in [0..4], (2 \cdot a_{2 \cdot i +1} - b_{2 \cdot i +1}) (2 \cdot a_{2 \cdot i +1} -9 - b_{2\cdot i +1}) = 0$$
+This constraint is sufficient to ensure the validity of the transformed digits, because the lookup constraints ensure they are valid digits.
 
 Thus, the custom constraint for transformed digits is:
 
@@ -212,9 +213,11 @@ CUS_1 = \{0..2\}
 \end{cases}
 $$
 
-3. The Euclidean division is correct $s = 10 \cdot q + r$.
+3. The division is correct
 
-Thus, the custom constraint for Euclidean division is:
+$$s = 10 \cdot q + r$$
+
+Thus, the custom constraint for the division is:
 
 $$
 \begin{cases}
