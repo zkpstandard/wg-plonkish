@@ -61,7 +61,7 @@ The witness matrix will contain:
   2 \cdot a_{2 \cdot i +1} - 9 & \text{ otherwise}
   \end{cases}
   $$
-- the sum of all digits $s$ and some intermediate sums $s_0$ and $s_1$. These intermediate sums help optimize the layout of the witness matrix layout.
+- the sum of all digits $s$ and some intermediate sums $s_0$ and $s_1$. These intermediate sums help optimize the witness matrix layout.
 $$
 \begin{cases}
 s_0 &= b_1 + a_0 + a_2 + a_4 \\
