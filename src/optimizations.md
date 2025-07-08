@@ -130,8 +130,6 @@ In this specification, we only support fixed lookup tables determined in advance
 
 Here $q_{v,s} \mathrel{⦂} \mathbb{F}^{d  m} \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$ are multivariate polynomials that collectively map the witness entries $\vec{w}_j$ on the lookup row $j \in \mathsf{LOOK}_v$ to a tuple of field elements. This tuple will be constrained to match some row of the table $\mathsf{TAB}_v$.
 
-#endregion
-
 ## Notation
 
 If not otherwise defined, variable names used here are consistent with [the relation description](relation.md).
