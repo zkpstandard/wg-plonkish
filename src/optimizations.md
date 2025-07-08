@@ -222,7 +222,7 @@ $$
 \end{array}
 $$
 
-Then, the overall correctness condition is that $\mathbf{r}$ must be chosen such that $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$. We claim that this implies the more general definition of correctness preservation for this family of translations.
+Then, the overall correctness condition is that $\mathbf{r}$ must be chosen such that $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$. We provide an algorithm for finding $\mathbf{r}$ shortly.
 
 <span style="color:red">Mary:  The overall correctness condition is with respect to what R? I can gather that the goal is to ensure that no copy constraints are required in the R part of the circuit?  We should state this somewhere. </span>
 
@@ -264,7 +264,7 @@ $$
 j' \in \mathsf{LOOK}'_v \Rightarrow \big[\, q_{v,s}\!\left(\big[\,w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m \,\big]\right) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
 $$
 
-### Algorithm $\mathsf{FIND\_ROW\_MAPPING}$: Greedy algorithm for choosing $\mathbf{r}$
+### Greedy algorithm for choosing $\mathbf{r}$
 
 There is a greedy algorithm for deterministically choosing $\mathbf{r}$ that maintains ordering of rows (i.e. $\mathbf{r}$ is strictly increasing), and simply inserts a gap in the row mapping whenever the above constraint would not be met for all rows so far.
 
