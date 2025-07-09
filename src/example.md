@@ -4,7 +4,7 @@ This page provides a detailed walkthrough of building a Plonk constraint system 
 
 ## Luhn algorithm
 
-The Luhn algorithm is a check digit formula used to validate identification numbers such as credit card numbers or national identification numbers. It works as follows:
+The [Luhn algorithm](https://en.wikipedia.org/wiki/Luhn_algorithm) is a check digit formula used to validate identification numbers such as credit card numbers or national identification numbers. It works as follows:
 
 1. Split the number into a payload (all digits except the last one) and a given check digit (the last digit).
 2. Compute what the check digit should be from the payload:
