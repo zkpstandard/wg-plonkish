@@ -41,8 +41,10 @@ structure AbstractCircuit where
 
   /-- The number of columns that are fixed. -/
   m_f : Fin (m+1)
+  /-- Whether a location is fixed. -/
+  is_fixed (e : Location m n) := Fin.castSucc e.i < m_f
   /-- The fixed content of the first `m_f` columns. -/
-  f (e : Location m n) (is_fixed_col : Fin.castSucc e.i < m_f) : F
+  f (e : {e : Location m n // is_fixed e}) : F
 
   /-- The number of custom gates. The default is 0, in which case `p` and `CUS` need not be provided. -/
   U : ℕ := 0
@@ -68,6 +70,9 @@ variable (C : AbstractCircuit F)
 /-- The witness entry type for an `AbstractCircuit`. -/
 abbrev Entry := Location C.m C.n
 
+/-- The set of fixed locations. -/
+abbrev FixedEntry := {e : Location C.m C.n // C.is_fixed e}
+
 /-- The instance type for an `AbstractCircuit`. -/
 abbrev Instance := Vector F C.t
 
@@ -92,7 +97,7 @@ referring to its parts. Lean's type system still allows it to be used as a `Prop
 -/
 structure R_parts (φ : C.Instance) (w : C.Witness) where
   /-- Semantics of fixed constraints. -/
-  fixed (e : C.Entry) (is_fixed_col : Fin.castSucc e.i < C.m_f) : w e = C.f e is_fixed_col
+  fixed (e : C.FixedEntry) : w e = C.f e
 
   /-- Semantics of copy constraints for instance entries. -/
   input (k : Fin C.t) : w C.S[k] = φ[k]
@@ -145,7 +150,7 @@ def dt : AbstractCircuit F := {
   -- There is one fixed column. --/
   m_f := 1
   -- The value of the fixed entry is `42 : F`.
-  f _ _ := 42
+  f _ := 42
 }
 
 /-- Construct a witness. -/
@@ -178,7 +183,7 @@ by
   obtain ⟨ fixed, input, equal ⟩ := stmt
   have hx_a : x = a  := by let hx := input (0 : Fin 1); exact hx.symm
   have ha_c : a = c  := by let ha_c := equal dt_a dt_c; simp [dt, dt_witness, dt_a, dt_c, dt_entry, entry] at ha_c; exact ha_c
-  have hc   : c = 42 := by let hc := fixed dt_c <| show Fin.castSucc dt_c.i < (dt F).m_f by simp [dt, dt_c, dt_entry, entry];
+  have hc   : c = 42 := by let hc := fixed ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
                            simp [dt_c, dt_witness, dt_entry, entry] at hc; exact hc
   simp_all
 
@@ -204,7 +209,7 @@ def dt_complete_by_refinement : Complete (dt_refinement F) :=
     w := dt_valid_witness F
     satisfied := {
       fixed e := by simp [dt, dt_valid_witness, dt_witness]
-      input k := by rw [htrans, show k = (0 : Fin 1) by ext; simp];
+      input k := by rw [htrans, show k = (0 : Fin 1) by ext; simp]
                     simp [dt, dt_valid_witness, dt_witness]
                     exact hsat.symm
       equal e e' := by simp [dt, dt_valid_witness, dt_witness]
@@ -219,7 +224,7 @@ def dt_knowledge_sound_by_refinement : KnowledgeSound (dt_refinement F) :=
       let a := sat'.w dt_a
       let c := sat'.w dt_c
       obtain ⟨ fixed, input, equal ⟩ := sat'.satisfied
-      let hc := fixed dt_c <| show Fin.castSucc dt_c.i < (dt F).m_f by simp [dt, dt_c, dt_entry, entry];
+      let hc := fixed ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
       have hx_a : x = a := by let hx := input (0 : Fin 1); simp [dt, dt_a, dt_entry, entry] at hx; simp [a]; exact hx.symm
       have ha_c : a = c := by let ha_c := equal dt_a dt_c; simp [dt, dt_a, dt_c, dt_entry, entry] at ha_c; exact ha_c
       have c_42 : c = 42 := by simp [dt_c, dt_entry, entry] at hc; exact hc
@@ -230,8 +235,7 @@ def dt_knowledge_sound_by_refinement : KnowledgeSound (dt_refinement F) :=
 end Example
 
 /-- Not sure whether this kind of lemma is useful yet. -/
-lemma check_constant (C : AbstractCircuit F) (x' : C.Instance) (sat' : Satisfying C.R x')
-    (e : Location C.m C.n) (is_fixed_col : Fin.castSucc e.i < C.m_f)
-    : sat'.w e = C.f e is_fixed_col := by
+lemma check_constant (C : AbstractCircuit F) (x' : C.Instance) (sat' : Satisfying C.R x') (e : C.FixedEntry)
+    : sat'.w e = C.f e := by
   obtain ⟨ fixed ⟩ := sat'.satisfied
-  rw [fixed e is_fixed_col]
+  rw [fixed e]
