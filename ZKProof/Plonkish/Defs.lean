@@ -112,6 +112,25 @@ structure R_parts (φ : C.Instance) (w : C.Witness) where
 
 def R : C.Relation := { (φ, w) | C.R_parts F φ w }
 
+/-- Use a fixed constraint. -/
+lemma use_fixed {x : C.Instance} (sat : Satisfying C.R x) (e : C.FixedEntry)
+    : sat.w e = C.f e := by
+  obtain ⟨ fixed ⟩ := sat.satisfied
+  rw [fixed e]
+
+/-- Use an input constraint. -/
+lemma use_input {x : C.Instance} (sat : Satisfying C.R x) (k : Fin C.t)
+    : x[k] = sat.w C.S[k] := by
+  obtain ⟨ _, input ⟩ := sat.satisfied
+  rw [input k]
+
+/-- Use an equality constraint. -/
+lemma use_equal {x : C.Instance} (sat : Satisfying C.R x) (e e' : C.Entry) (equiv : C.E e e')
+    : sat.w e = sat.w e' := by
+  obtain ⟨ _, _, equal ⟩ := sat.satisfied
+  rw [equal e e']
+  exact equiv
+
 end AbstractCircuit
 
 
@@ -174,18 +193,14 @@ theorem dt_complete_direct : (#v[42], dt_valid_witness F) ∈ (dt F).R F := {
 /--
 Soundness of the `dt` example circuit.
 
-We show that any satisfying witness implies `x = 42` (and also `a = c = 42`).
+We show that any satisfying witness implies `x = 42`.
 -/
-theorem dt_knowledge_sound_direct (x c a : F)
-    (stmt : (#v[x], dt_witness F c a) ∈ (dt F).R F)
-    : x = 42 ∧ a = 42 ∧ c = 42 :=
+theorem dt_knowledge_sound_direct (x : F)
+    (sat : Satisfying ((dt F).R F) #v[x]) : x = 42 :=
 by
-  obtain ⟨ fixed, input, equal ⟩ := stmt
-  have hx_a : x = a  := by let hx := input (0 : Fin 1); exact hx.symm
-  have ha_c : a = c  := by let ha_c := equal dt_a dt_c; simp [dt, dt_witness, dt_a, dt_c, dt_entry, entry] at ha_c; exact ha_c
-  have hc   : c = 42 := by let hc := fixed ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
-                           simp [dt_c, dt_witness, dt_entry, entry] at hc; exact hc
-  simp_all
+  calc x = sat.w dt_a := (dt F).use_input F sat (0 : Fin 1)
+       _ = sat.w dt_c := (dt F).use_equal F sat dt_a dt_c rfl
+       _ = 42         := (dt F).use_fixed F sat ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
 
 /--
 An alternative is to show that a refinement from an abstract relation is complete and sound.
@@ -221,21 +236,10 @@ def dt_knowledge_sound_by_refinement : KnowledgeSound (dt_refinement F) :=
     w := (),
     satisfied := by
       let x := (dt_refinement F).trans.symm x'
-      let a := sat'.w dt_a
-      let c := sat'.w dt_c
-      obtain ⟨ fixed, input, equal ⟩ := sat'.satisfied
-      let hc := fixed ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
-      have hx_a : x = a := by let hx := input (0 : Fin 1); simp [dt, dt_a, dt_entry, entry] at hx; simp [a]; exact hx.symm
-      have ha_c : a = c := by let ha_c := equal dt_a dt_c; simp [dt, dt_a, dt_c, dt_entry, entry] at ha_c; exact ha_c
-      have c_42 : c = 42 := by simp [dt_c, dt_entry, entry] at hc; exact hc
-      simp_all
-      exact hx_a
+      calc x = x'[0]       := by simp_all only [x]; rfl
+           _ = sat'.w dt_a := (dt F).use_input F sat' (0 : Fin 1)
+           _ = sat'.w dt_c := (dt F).use_equal F sat' dt_a dt_c rfl
+           _ = 42          := (dt F).use_fixed F sat' ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
   }
 
 end Example
-
-/-- Not sure whether this kind of lemma is useful yet. -/
-lemma check_constant (C : AbstractCircuit F) (x' : C.Instance) (sat' : Satisfying C.R x') (e : C.FixedEntry)
-    : sat'.w e = C.f e := by
-  obtain ⟨ fixed ⟩ := sat'.satisfied
-  rw [fixed e]
