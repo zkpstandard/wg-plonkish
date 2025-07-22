@@ -106,7 +106,7 @@ structure Satisfying {I W : Type} (R : Rel I W) (x : I) where
   /-- The witness. -/
   w : W
   /-- The given relation is satisfied by this witness on the given instance. -/
-  satisfied : R x w
+  satisfied : (x, w) ∈ R
 
 /--
 A `Refinement` is a transformation from a more abstract or high-level relation
