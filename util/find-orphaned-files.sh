@@ -35,7 +35,7 @@ function parse-linked-files
 
 function find-actual-files
 {
-  find . -type f -not -name 'SUMMARY.md' -name '*.md' | sort
+  find . -type f -not -name 'SUMMARY.md' -name '*.md' -and -not -name 'draft-name-plonkish-*' | sort
 }
 
 main "$@"
