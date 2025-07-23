@@ -64,7 +64,12 @@ The relation $\mathcal{R}_{\mathsf{concrete}}$ takes witnesses of the following 
 | ----------------- | -------- |
 | $w$               | The witness matrix $w \mathrel{⦂} \mathbb{F}^{m \times n}$. |
 
-✨ Define $\vec{w}_{j} \in \mathbb{F}^{m d}$ as the row vector $\big[\, w[i, j + \mathsf{offset}] : (i, \mathsf{offset}) \leftarrow (0 \text{..} m) \times \mathsf{offsets} \,\big]$.
+✨ Define $\vec{w}_{j} \in \mathbb{F}^{m d}$ as the row vector  
+$\vec{w}_{j} := \big[\, w[i, j + \mathsf{offset}] : (i, \mathsf{offset}) \leftarrow (0 \text{..} m) \times \mathsf{offsets} \,\big]$.
+
+Some coordinates of $\vec{w}_j$ may involve out-of-bounds accesses to $w$, since $j$ ranges up to $n$ and $\mathsf{offsets}$ may include nonzero values. We adopt the convention that such out-of-bounds entries are left *undefined* — that is, their values are not constrained by the relation and may be set arbitrarily.
+
+
 
 ### Definition of the relation
 
@@ -157,8 +162,7 @@ We also claim that a correctness-preserving translation in this sense, when used
 These translations aim to improve circuit efficiency in the following ways:
 
 1) Reduce the number of concrete columns.  Each set of offset columns can be represented using a single concrete witness column.  The number of witness columns impacts the size of the resulting zero-knowledge proof.
-2) <span style="color:red">Mary:  Why do regions matter, and how do they improve efficiency? </span>
-3) Reduce the overall circuit area:  When offset hints identify abstract cells as equivalent, the backend can optimize layout by reordering rows so that equivalent cells overlap in the concrete matrix, minimizing unused space.
+2) Reduce the overall circuit area:  When offset hints identify abstract cells as equivalent, the backend can optimize layout by reordering rows so that equivalent cells overlap in the concrete matrix, minimizing unused space.
 
 ## A model for a family of abstract-to-concrete translations and their correctness-preservation
 
@@ -241,17 +245,17 @@ $
                                    ^
                                    |
                         +--------------------+
-                        |                    |                    
-                   +--------+                |
-                   | ok_for |                |
-                   +--------+                |
-                        ^                    |
                         |                    |
-              +------------------------------+
+                   +---------+               |
+                   | ok_for  |               |
+                   +---------+               |
+                      ^    ^                 |
+                      |    |                 |
+              +-------+    +-----------------+
               |                              |
-    +-------------------+             +-------------+
-    | working_coord_map |             | constrained | 
-    +-------------------+             +-------------+
+    +-------------------+           +----------------+
+    | working_coord_map |           |  constrained   |
+    +-------------------+           +----------------+
 ```
 
 
@@ -432,7 +436,7 @@ We now specify $\mathsf{ok\_for}$ that checks that constrained cells have unique
 | return $\mathsf{true}$ if all checks pass| 
 | else return $\mathsf{false}$|
 
-We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).  Tesselation between custom constraints is represented by equivalence under $\equiv$. 
+Tesselation between custom constraints is represented by equivalence under $\equiv$. 
 
 Discussion: It is alright if one or more *unconstrained* abstract cells map to the same concrete cell as a constrained abstract cell, because that will not affect the meaning of the circuit. Notice that specifying $\equiv$ as an equivalence relation helps to simplify this definition (as compared to specifying it as a set of copy constraints), because an equivalence relation is by definition symmetric, reflexive, and transitive.
 
