@@ -67,11 +67,20 @@ structure AbstractCircuit where
 namespace AbstractCircuit
 variable (C : AbstractCircuit F)
 
+/-- The type of column indices for an `AbstractCircuit`. -/
+abbrev Col := Fin C.m
+
+/-- The type of row indices for an `AbstractCircuit`. -/
+abbrev Row := Fin C.n
+
+/-- The type of input indices for an `AbstractCircuit`. -/
+abbrev Input := Fin C.t
+
 /-- The witness entry type for an `AbstractCircuit`. -/
 abbrev Entry := Location C.m C.n
 
 /-- The set of fixed locations. -/
-abbrev FixedEntry := {e : Location C.m C.n // C.is_fixed e}
+abbrev FixedEntry := {e : C.Entry // C.is_fixed e}
 
 /-- The instance type for an `AbstractCircuit`. -/
 abbrev Instance := Vector F C.t
@@ -82,12 +91,15 @@ abbrev Witness := C.Entry → F
 /-- The relation type for an `AbstractCircuit`. -/
 abbrev Relation := Rel C.Instance C.Witness
 
-/-- `row_vec w j : Fin m → F` is the witness vector for row `j`. -/
-def row_vec (w : C.Witness) (j : Fin C.n) :=
-  fun (i : Fin C.m) => w { i := i, j := j }
+/-- The type of polynomials over row vectors. -/
+abbrev RowPoly := MvPolynomial C.Col F
+
+/-- `row_vec w j : C.Col → F` is the witness vector for row `j`. -/
+def row_vec (w : C.Witness) (j : C.Row) :=
+  fun (i : C.Col) => w { i := i, j := j }
 
 /-- Evaluate a polynomial on the witness vector for a given row. -/
-def row_eval (w : C.Witness) (j : Fin C.n) (poly : MvPolynomial (Fin C.m) F) :=
+def row_eval (w : C.Witness) (j : C.Row) (poly : C.RowPoly) :=
   poly.eval (C.row_vec F w j)
 
 /--
@@ -100,7 +112,7 @@ structure R_parts (φ : C.Instance) (w : C.Witness) where
   fixed (e : C.FixedEntry) : w e = C.f e
 
   /-- Semantics of copy constraints for instance entries. -/
-  input (k : Fin C.t) : w C.S[k] = φ[k]
+  input (k : C.Input) : w C.S[k] = φ[k]
   /-- Semantics of copy constraints for witness entries. -/
   equal (e e' : C.Entry) (equated : C.E e e') : w e = w e'
 
@@ -119,7 +131,7 @@ lemma use_fixed {x : C.Instance} (sat : Satisfying C.R x) (e : C.FixedEntry)
   rw [fixed e]
 
 /-- Use an input constraint. -/
-lemma use_input {x : C.Instance} (sat : Satisfying C.R x) (k : Fin C.t)
+lemma use_input {x : C.Instance} (sat : Satisfying C.R x) (k : C.Input)
     : x[k] = sat.w C.S[k] := by
   obtain ⟨ _, input ⟩ := sat.satisfied
   rw [input k]
