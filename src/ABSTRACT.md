@@ -38,7 +38,7 @@ The optimised Plonkish constraint system specification will detail:
 - Support for rotation constraints, which leverage the relative positions of assigned matrix elements to reduce the size of the matrix and the number of equality constraints.
 - How to compile to the optimised constraint system.
 
-Accompanying the specification there will be an open-source reference implementation written in Rust, and corresponding test vectors.  We also intend to include an executable specification of the Plonkish relation, to facilitate formally verifying that the optimisations included in the optimised constraint system efficiently preserve the completeness, knowledge soundness, and zero-knowledge properties of proof systems applied to the unoptimised constraint system.
+Accompanying the specification there will be an open-source reference implementation written in Rust, and corresponding test vectors.  We also intend to include an executable specification of the Plonkish relation in Lean 4, to facilitate formally verifying that the optimisations included in the optimised constraint system efficiently preserve the completeness, knowledge soundness, and zero-knowledge properties of proof systems applied to the unoptimised constraint system.
 
 ## Time Frame
 The team will meet once every two weeks during 2024 and aims to have an initial draft specification by July 2024.
@@ -47,4 +47,4 @@ The team will meet once every two weeks during 2024 and aims to have an initial 
 - [The Halo2 Book](https://zcash.github.io/halo2/concepts/arithmetization.html)
 - [UltraPlonk Arithmetisation](https://docs.zkproof.org/pages/standards/accepted-workshop3/proposal-turbo_plonk.pdf)
 - [Plaf format](https://github.com/Dhole/polyexen/blob/master/plaf.md)
-- [hax](https://github.com/hacspec/hax)
+- [Lean 4](https://lean-lang.org/)
