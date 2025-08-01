@@ -15,6 +15,7 @@ This demonstrates fixed, input, and equality constraints, but not custom gates o
 def dt_entry (i : Fin (2 : ℕ+)) (j : Fin (1 : ℕ+)) := entry i j
 def dt_a := dt_entry 1 0
 def dt_c := dt_entry 0 0
+def dt_in (i : Fin 1) := i
 
 variable (F : Type) [Field F]
 
@@ -67,7 +68,7 @@ We show that any satisfying witness implies `x = 42`.
 theorem dt_knowledge_sound_direct (x : F)
     (sat : Satisfying (dt F).R #v[x]) : x = 42 :=
 by
-  calc x = sat.w dt_a := (dt F).use_input sat (0 : Fin 1)
+  calc x = sat.w dt_a := (dt F).use_input sat (dt_in 0)
        _ = sat.w dt_c := (dt F).use_equal sat dt_a dt_c rfl
        _ = 42         := (dt F).use_fixed sat ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
 
@@ -93,7 +94,7 @@ def dt_complete_by_refinement : Complete (dt_refinement F) :=
     w := dt_valid_witness F
     satisfied := {
       fixed e := by simp [dt, dt_valid_witness, dt_witness]
-      input k := by rw [htrans, show k = (0 : Fin 1) by ext; simp]
+      input k := by rw [htrans, show k = dt_in 0 by ext; simp]
                     simp [dt, dt_valid_witness, dt_witness]
                     exact hsat.symm
       equal e e' := by simp [dt, dt_valid_witness, dt_witness]
@@ -106,7 +107,7 @@ def dt_knowledge_sound_by_refinement : KnowledgeSound (dt_refinement F) :=
     satisfied := by
       let x := (dt_refinement F).trans.symm x'
       calc x = x'[0]       := by simp_all only [x]; rfl
-           _ = sat'.w dt_a := (dt F).use_input sat' (0 : Fin 1)
+           _ = sat'.w dt_a := (dt F).use_input sat' (dt_in 0)
            _ = sat'.w dt_c := (dt F).use_equal sat' dt_a dt_c rfl
            _ = 42          := (dt F).use_fixed sat' ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
   }
