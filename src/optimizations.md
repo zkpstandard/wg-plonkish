@@ -24,10 +24,9 @@ An "abstract cell" specifies an entry in the witness matrix $w$ of the abstract 
 
 We will denote the witness value at column $i$ and row $j$ as $w[i, j]$.
 
-We say that an abstract cell with coordinates $(i, j)$ is "constrained" if it is in a fixed column or if it appears in some copy, custom, or lookup constraint. More precisely, $\mathsf{constrained}[i, j]$ is true iff any of the following hold:
+We say that an abstract cell with coordinates $(i, j)$ is "constrained" if it appears in some copy, custom, or lookup constraint. More precisely, $\mathsf{constrained}[i, j]$ is true iff any of the following hold:
 $$
 \begin{array}{rcl}
-&& i < m_f \\
 \exists (k, \ell) \neq (i, j) &:& (i, j) \equiv (k, \ell) \\
 \exists k &:& S[k] = (i, j) \\
 \exists u &:& j \in \mathsf{CUS}_u \text{ and } w[i, j] \text{ ``might be used'' in } p_u(\vec{w}_j) \\
