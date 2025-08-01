@@ -242,10 +242,11 @@ $$
 
 For condition 2, the abstract witness $w$ that we find will be $\mathcal{F}'(x')$. Since $\mathcal{I}$ is the identity function, we have that for any $(x', w') \mathrel{⦂} \mathbb{F}^t \times \mathbb{F}^{m' \times n'}$, $(\mathcal{I}^{-1}(x'), \mathcal{F}'(x')) = (x', w)$ exists and is efficiently computable. We must also prove that $(x', w') \in \mathcal{R}_{\mathsf{concrete}} \Rightarrow (x', w) \in \mathcal{R}_{\mathsf{plonkish}}$ (i.e. loosely speaking, the converse of what we need to prove for condition 1).
 
-Given the definitions from [above](#constraint-translations), it is straightforward to see that in the statements to be proven for both conditions:
+Given the definitions from [above](#constraint-translations), it is straightforward to see [FIXME] that in the statements to be proven for both conditions:
 
-* the concrete fixed constraints for concrete cells $S'[k]$, $k \in [0,t)$ are in one-to-one correspondence with equivalent abstract fixed constraints for abstract cells $S[k]$, $k \in [0,t)$;
-* the concrete copy constraints for concrete cells $(i',j') \equiv' (k',\ell')$ are in one-to-one correspondence with equivalent abstract copy constraints for abstract cells $(i,j) \equiv (k,\ell)$;
+* the concrete fixed constraints for concrete fixed cells $(i',j')$ are in one-to-one correspondence with equivalent abstract fixed constraints for abstract cells $(i,j)$;
+* the concrete input constraints for concrete cells $S'[k]$, $k \in [0,t)$ are in one-to-one correspondence with equivalent abstract input constraints for abstract cells $S[k]$, $k \in [0,t)$;
+* the concrete equality constraints for concrete cells $(i',j') \equiv' (k',\ell')$ are in one-to-one correspondence with equivalent abstract equality constraints for abstract cells $(i,j) \equiv (k,\ell)$;
 * the concrete custom constraints for concrete rows $j' \in \mathsf{CUS}'_u$, are in one-to-one correspondence with equivalent abstract custom constraints for abstract rows $j \in \mathsf{CUS}_u$;
 * the concrete lookup constraints for concrete rows $j' \in \mathsf{LOOK}'_v$, are in one-to-one correspondence with equivalent abstract lookup constraints for abstract rows $j \in \mathsf{LOOK}_v$.
 
