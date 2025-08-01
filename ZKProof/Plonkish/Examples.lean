@@ -68,9 +68,10 @@ We show that any satisfying witness implies `x = 42`.
 theorem dt_knowledge_sound_direct (x : F)
     (sat : Satisfying (dt F).R #v[x]) : x = 42 :=
 by
-  calc x = sat.w dt_a := (dt F).use_input sat (dt_in 0)
-       _ = sat.w dt_c := (dt F).use_equal sat dt_a dt_c rfl
-       _ = 42         := (dt F).use_fixed sat ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
+  let st := sat.satisfied -- the Plonkish statement
+  calc x = sat.w dt_a := symm <| st.input (dt_in 0)
+       _ = sat.w dt_c := st.equal dt_a dt_c rfl
+       _ = 42         := st.fixed ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
 
 /--
 An alternative is to show that a refinement from an abstract relation is complete and sound.
@@ -106,8 +107,9 @@ def dt_knowledge_sound_by_refinement : KnowledgeSound (dt_refinement F) :=
     w := (),
     satisfied := by
       let x := (dt_refinement F).trans.symm x'
+      let st := sat'.satisfied -- the Plonkish statement
       calc x = x'[0]       := by simp_all only [x]; rfl
-           _ = sat'.w dt_a := (dt F).use_input sat' (dt_in 0)
-           _ = sat'.w dt_c := (dt F).use_equal sat' dt_a dt_c rfl
-           _ = 42          := (dt F).use_fixed sat' ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
+           _ = sat'.w dt_a := symm <| st.input (dt_in 0)
+           _ = sat'.w dt_c := st.equal dt_a dt_c rfl
+           _ = 42          := st.fixed ⟨dt_c, by simp [dt, dt_c, dt_entry, entry]⟩
   }

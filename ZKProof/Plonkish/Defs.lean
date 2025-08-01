@@ -125,19 +125,4 @@ structure R_parts (φ : C.Instance) (w : C.Witness) where
 
 def R : C.Relation := { (φ, w) | C.R_parts φ w }
 
-/-- Use a fixed constraint. -/
-lemma use_fixed {x : C.Instance} (sat : Satisfying C.R x) (e : C.FixedEntry)
-    : sat.w e = C.f e := by
-  exact sat.satisfied.fixed e
-
-/-- Use an input constraint. -/
-lemma use_input {x : C.Instance} (sat : Satisfying C.R x) (k : C.Input)
-    : x[k] = sat.w C.S[k] := by
-  exact symm <| sat.satisfied.input k
-
-/-- Use an equality constraint. -/
-lemma use_equal {x : C.Instance} (sat : Satisfying C.R x) (e e' : C.Entry) (equiv : C.E e e')
-    : sat.w e = sat.w e' := by
-  exact sat.satisfied.equal e e' equiv
-
 end AbstractCircuit
