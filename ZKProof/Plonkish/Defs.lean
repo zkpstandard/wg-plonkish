@@ -128,20 +128,16 @@ def R : C.Relation := { (φ, w) | C.R_parts φ w }
 /-- Use a fixed constraint. -/
 lemma use_fixed {x : C.Instance} (sat : Satisfying C.R x) (e : C.FixedEntry)
     : sat.w e = C.f e := by
-  obtain ⟨ fixed ⟩ := sat.satisfied
-  rw [fixed e]
+  exact sat.satisfied.fixed e
 
 /-- Use an input constraint. -/
 lemma use_input {x : C.Instance} (sat : Satisfying C.R x) (k : C.Input)
     : x[k] = sat.w C.S[k] := by
-  obtain ⟨ _, input ⟩ := sat.satisfied
-  rw [input k]
+  exact symm <| sat.satisfied.input k
 
 /-- Use an equality constraint. -/
 lemma use_equal {x : C.Instance} (sat : Satisfying C.R x) (e e' : C.Entry) (equiv : C.E e e')
     : sat.w e = sat.w e' := by
-  obtain ⟨ _, _, equal ⟩ := sat.satisfied
-  rw [equal e e']
-  exact equiv
+  exact sat.satisfied.equal e e' equiv
 
 end AbstractCircuit
