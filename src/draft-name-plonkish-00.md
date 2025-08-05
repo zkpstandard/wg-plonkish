@@ -92,7 +92,7 @@ The circuit `C : AbstractCircuit_Fp` in turn has the following form:
 | `n > 0`          | Number of rows for the witness matrix.                                                                               |                                           |
 | `m > 0`          | Number of columns for the witness matrix.                                                                            |                                           |
 | `≡`              | An equivalence relation on `[0,m) x [0,n)`, indicating which witness entries are equal to each other.                | [Copy constraints](#copy-constraints)     |
-| `S`              | A set `S ⊆ ([0,m) x [0,n)) x [0,t)`, indicating which witness entries are equal to instance vector entries.          | [Copy constraints](#copy-constraints)     |
+| `S`              | A vector `S : ([0,m) x [0,n))^t`, indicating witness entries to be constrained to match the instance vector.         | [Copy constraints](#copy-constraints)     |
 | `m_f <= m`       | Number of columns that are fixed.                                                                                    | [Fixed constraints](#fixed-constraints)   |
 | `f`              | The fixed content of the first `m_f` columns, `f : Fp^(m_f x n)`.                                                    | [Fixed constraints](#fixed-constraints)   |
 | `p_u`            | Custom multivariate polynomials `p_u : Fp^m -> Fp`.                                                                  | [Custom constraints](#custom-constraints) |
@@ -132,7 +132,7 @@ such that:
 | Domains                                                                | Constraints                                              |
 | -----------------------------------------------------------------------| -------------------------------------------------------- |
 | `w : Fp^(m × n)`, `f : Fp^(m_f × n)`                                   | `i in [0, m_f), j in [0, n) => w[i, j] = f[i, j]`        |
-| `S ⊆ ([0, m) x [0, n)) x [0, t)`, `phi : Fp^t`                         | `((i, j), k) in S => w[i, j] = phi[k]`                   |
+| `S : ([0, m) x [0, n))^t`, `phi : Fp^t`                                | `k in [0, t) => w[S[k]] = phi[k]`                        |
 | `≡ ⊆ ([0, m) x [0, n)) x ([0, m) × [0, n))`                            | `(i, j) ≡ (k, l) => w[i, j] = w[k, l]`                   |
 | `CUS_u ⊆ [0, n)`, `p_u : Fp^m -> Fp`                                   | `j in CUS_u => p_u(w_j) = 0`                             |
 | `LOOK_v ⊆ [0, n)`, `q_{v,s} : Fp^m -> Fp`, `TAB_v ⊆ Fp^{L_v}`          | `j in LOOK_v => [ q_{v,s}(w_j) : s <- 0..L_v ] in TAB_v` |
@@ -156,10 +156,10 @@ The first `m_f` columns of `w` are fixed to the columns of `f`.
 
 Copy constraints enforce that entries in the witness matrix are equal to each other, or that an instance entry is equal to a witness entry.
 
-| Copy Constraints                     | Description                                                                                                     |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `((i,j),k) in S => w[i, j] = phi[k]` | The `(i,j)` advice entry is equal to the `k` instance entry for all `((i,j),k) in S`.                           |
-| `(i,j) ≡ (k,l) => w[i, j] = w[k, l]` | `≡` is an equivalence relation indicating which witness entries are constrained to be equal.                    |
+| Copy Constraints                     | Description                                                                                               |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `k in [0, t) => w[S[k]] = phi[k]`.   | The `(i,j)` advice entry is equal to the `k` instance entry for `S[k] = (i,j)`.                           |
+| `(i,j) ≡ (k,l) => w[i, j] = w[k, l]` | `≡` is an equivalence relation indicating which witness entries are constrained to be equal.              |
 
 By convention, when fixed abstract cells have the same value, we consider them to be equivalent under `≡`. That is, if `i < m_f && k < m_f && f[i, j] = f[k, l]` then `(i, j) ≡ (k, l)`.
 
