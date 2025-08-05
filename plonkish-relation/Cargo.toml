@@ -3,7 +3,7 @@ name = "plonkish-relation"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-description = "Specification of the PLONKish relation in hacspec"
+description = "Specification of the PLONKish relation"
 license.workspace = true
 
 [dependencies]
