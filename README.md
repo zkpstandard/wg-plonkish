@@ -3,12 +3,12 @@
 As part of the [ZKProof standardization effort](https://zkproof.org), the
 Plonkish Constraint System Working Group is developing a specification, a
 reference implementation written in Rust, and test vectors for
-*Plonkish arithmetisation*.
+*Plonkish arithmetization*.
 
 See also [Mary's presentation about the Plonkish Working Group](https://zkproof.org/2023/09/12/plonk-standardization-zkproof-5-5-mary-maller-talk-summary/).
 
-Plonkish arithmetisation is a means of expressing circuits for probabilistic
-and/or zero-knowledge proving systems. This arithmetisation was originally
+Plonkish arithmetization is a means of expressing circuits for probabilistic
+and/or zero-knowledge proving systems. This arithmetization was originally
 developed in the context of the [PLONK](https://eprint.iacr.org/2019/953)
 proving system, and refined for use in the [Halo 2](https://zcash.github.io/halo2/)
 proving system. The variant of Plonkish used by Halo 2 is the initial focus
