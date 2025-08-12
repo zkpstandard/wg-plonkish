@@ -112,7 +112,6 @@ The circuit `C : AbstractCircuit_Fp` in turn has the following form:
 | `q_{v,s}`        | Scaling multivariate polynomials `q_{v,s} : Fp^m -> Fp` for `s in 0..L_v`.                                           | [Lookup constraints](#lookup-constraints) |
 | `LOOK_v`         | Sets `LOOK_v ⊆ [0,n)`, indicating rows on which the scaling polynomials `q_{v,s}` evaluate to some tuple in `TAB_v`. | [Lookup constraints](#lookup-constraints) |
 
-
 ## Witnesses
 
 The relation `R_plonkish` takes witnesses of the following form:
@@ -136,7 +135,6 @@ Given the above definitions, the relation `R_plonkish` corresponds to a set of (
   - `phi`
 - `w`
 
-
 such that:
 
 | Domains                                                                | Constraints                                              |
@@ -152,11 +150,11 @@ In this model, a circuit-specific relation `R_{Fp, C}` for a field `Fp` and circ
 ## Conditions satisfied by statements in `R_plonkish`
 
 There are four types of constraints that a Plonkish statement `(x, w) in R_plonkish` must satisfy:
+
 * Fixed constraints
 * Copy constraints
 * Custom constraints
 * Lookup constraints
-
 
 ### Fixed constraints
 
@@ -191,7 +189,7 @@ Here `p_u : Fp^m -> Fp` is an arbitrary [multivariate polynomial](https://en.wik
 
 > Given `η` symbols `X_0, ..., X_{η−1}` called indeterminates, a multivariate polynomial `P` in these indeterminates with coefficients in `Fp` is a finite linear combination:
 >
-> `P(X_0, ..., X_{η−1}) = Σ_{z=0}^{ν−1} (c_z · Π_{b=0}^{η−1} X_b^{α_{z,b}})`  
+> `P(X_0, ..., X_{η−1}) = Σ_{z=0}^{ν−1} (c_z · Π_{b=0}^{η−1} X_b^{α_{z,b}})`
 >
 > where  `c_z in Fp`, `c_z neq 0`, and `ν` and `α_{z,b}` are positive integers.
 
@@ -218,7 +216,3 @@ This document has no actions for IANA.
 # Acknowledgements
 
 Firstname Lastname, Firstname Lastname.
-
-
-
-
