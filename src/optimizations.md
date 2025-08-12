@@ -99,7 +99,7 @@ There are four types of constraints that a Plonkish statement $(x, w) \in \mathc
 * Custom constraints
 * Lookup constraints
 
-An Interactive Oracle Proof for an optimised Plonkish constraint system must demonstrate that all of these contraints are satisfied by $\,(\!$ instance $\!,\,$ witness $\!) \in \mathcal{R}_{\mathsf{concrete}}\,$
+An Interactive Oracle Proof for an optimised Plonkish constraint system must demonstrate that all of these constraints are satisfied by $\,(\!$ instance $\!,\,$ witness $\!) \in \mathcal{R}_{\mathsf{concrete}}\,$
 
 #### Fixed constraints
 

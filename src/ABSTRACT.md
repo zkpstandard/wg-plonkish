@@ -3,14 +3,14 @@
 ## Contributors
 - Jack Grigg, Electric Coin Company
 - Daira-Emma Hopwood, Jacaranda Software
-- Mary Maller, Ethereum Foundation and PQShield (liason)
+- Mary Maller, Ethereum Foundation and PQShield (liaison)
 
 *Public Contact:* plonkish-team@googlegroups.com
 
 *Submitted on 2024-04-30 to the ZKProof Standards Committee.*
 
 ## Summary
-An arithmetisation is a language that a proof system uses to express statements. A circuit is a program in this language. The associated computation has been computed correctly if and only if all of the constraints in the circuit are satisified.
+An arithmetisation is a language that a proof system uses to express statements. A circuit is a program in this language. The associated computation has been computed correctly if and only if all of the constraints in the circuit are satisfied.
 
 The primary purpose of this ZKProof Working Group is to specify a particular arithmetisation: the "Plonkish" arithmetisation used in the Halo 2 proving system.
 
