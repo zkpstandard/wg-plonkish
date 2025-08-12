@@ -18,11 +18,11 @@ In this document, we:
 
 * **Specify the translation from an abstract to a concrete Plonkish relation**, aimed at implementers of the concrete relation.
 
-* **Prove that the translation preserves correctness**, again intended for readers verifying the soundness of the optimisations.
+* **Prove that the translation preserves correctness**, again intended for readers verifying the soundness of the optimizations.
 
 ## The Concrete Plonkish Relation
 
-The relation $\mathcal{R}_{\mathsf{concrete}}$ is an optimisation of $\mathcal{R}_{\mathsf{plonkish}}$.  We have highlighted differences using the icon ✨.
+The relation $\mathcal{R}_{\mathsf{concrete}}$ is an optimization of $\mathcal{R}_{\mathsf{plonkish}}$.  We have highlighted differences using the icon ✨.
 
 ### Instances
 
@@ -39,7 +39,7 @@ The circuit $C \mathrel{⦂} \mathsf{ConcreteCircuit}_{\mathbb{F}}$ in turn has 
 | Circuit element   | Description | Used in |
 | ----------------- | ----------- | ------- |
 | ✨ $d$                | Number of offsets.  |  |
-| ✨ $\mathsf{offsets}$ | Set of offsets $\subseteq \mathbb{Z}$ of size $d$ enabling optimisations on the circuit structure. | [Custom constraints](#custom-constraints), [Lookup constraints](#lookup-constraints)
+| ✨ $\mathsf{offsets}$ | Set of offsets $\subseteq \mathbb{Z}$ of size $d$ enabling optimizations on the circuit structure. | [Custom constraints](#custom-constraints), [Lookup constraints](#lookup-constraints)
 | $t$               | Length of the instance vector. |  |
 | $n > 0$           | Number of rows for the witness matrix. |  |
 | $m > 0$           | Number of columns for the witness matrix. |  |
@@ -99,7 +99,7 @@ There are four types of constraints that a Plonkish statement $(x, w) \in \mathc
 * Custom constraints
 * Lookup constraints
 
-An Interactive Oracle Proof for an optimised Plonkish constraint system must demonstrate that all of these constraints are satisfied by $\,(\!$ instance $\!,\,$ witness $\!) \in \mathcal{R}_{\mathsf{concrete}}\,$
+An Interactive Oracle Proof for an optimized Plonkish constraint system must demonstrate that all of these constraints are satisfied by $\,(\!$ instance $\!,\,$ witness $\!) \in \mathcal{R}_{\mathsf{concrete}}\,$
 
 #### Fixed constraints
 
@@ -320,7 +320,7 @@ $$
 $$
 where each entry $\mathsf{hints}[i]$ specifies a row hint and an offset for index $i$.
 
-Thus $\mathsf{hints}[i] = (h_i, e_i)$ specifies:
+Thus, $\mathsf{hints}[i] = (h_i, e_i)$ specifies:
 - $h_i \in [0, m)$: a column hint, representing a target column index
 - $e_i \in \mathbb{Z}$: a row offset expression (e.g., a symbolic shift)
 

@@ -33,9 +33,9 @@ informative:
       
 --- abstract
 
-An arithmetisation is a language that a proof system uses to express statements. A circuit is a program in this language. The associated computation has been computed correctly if and only if all of the constraints in the circuit are satisfied.
+An arithmetization is a language that a proof system uses to express statements. A circuit is a program in this language. The associated computation has been computed correctly if and only if all of the constraints in the circuit are satisfied.
 
-The primary purpose of this document is to specify a particular arithmetisation: the "Plonkish" arithmetisation used in the Halo 2 proving system.
+The primary purpose of this document is to specify a particular arithmetization: the "Plonkish" arithmetization used in the Halo 2 proving system.
 
 --- middle
 
