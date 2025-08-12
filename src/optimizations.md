@@ -250,7 +250,7 @@ $
 12) $\mathsf{LOOK}_v'$
 
 
-## Computing function $\mathsf{coord\_map}$ that gives the coordinate mapping
+## Computing the coordinate mapping $\mathsf{coord\_map}$
 
 ```
                              +-----------+
@@ -258,24 +258,24 @@ $
                              +-----------+
                                    ^
                                    |
-                        +-----------------------+
-                        |   compute_coord_map   |
-                        | (uses designer hints) |
-                        +-----------------------+
-                                   ^
-                                   |
-                        +--------------------+
+                       +-----------------------+
+                       |   compute_coord_map   |
+                       | (uses designer hints) |
+                       +-----------------------+
+                                 ^   ^
+                                 |   |
+                        +--------+   +-------+
                         |                    |
                    +---------+               |
                    | ok_for  |               |
                    +---------+               |
-                      ^    ^                 |
-                      |    |                 |
-              +-------+    +-----------------+
-              |                              |
-    +-------------------+           +----------------+
-    | working_coord_map |           |  constrained   |
-    +-------------------+           +----------------+
+                      ^   ^                  |
+                      |   |                  |
+              +-------+   +-------------+    |
+              |                         |    |
+    +-------------------+         +----------------+
+    | working_coord_map |         |  constrained   |
+    +-------------------+         +----------------+
 ```
 
 
@@ -295,7 +295,7 @@ It returns $(d', \mathsf{offsets}', m', m_f', n', \mathsf{coord\_map})$ such tha
   $$
   \mathsf{coord\_map} : [0, m) \times [0, n) \to [0, m') \times [0, n')
   $$
-   assigns concrete coordinates to each abstract cell position.
+  assigns concrete coordinates to each abstract cell position.
 
 To translate the abstract circuit to a concrete circuit using the hints, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, such that:
 * all *constrained* abstract cells map to concrete cell coordinates that are in range;
