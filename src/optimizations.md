@@ -303,7 +303,9 @@ To translate the abstract circuit to a concrete circuit using the hints, we cons
 
 ### Hints
 
-The domain $\mathsf{Hints}$ represents collections of designer-provided **offset hints**. Each hint assigns to a column index $i \in [0, m)$:
+The domain $\mathsf{Hints}$ represents collections of designer-provided **offset hints**. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
+
+Each hint assigns to a column index $i \in [0, m)$:
 
 - a target column hint $h_i \in [0, m)$, and
 - a row offset expression $e_i \in \mathbb{Z}$,
