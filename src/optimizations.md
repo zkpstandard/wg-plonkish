@@ -8,17 +8,139 @@ The benefit of the simpler abstract model is that it allows reasoning about the 
 
 In this document we specify a method to translate from an abstract circuit to a concrete one, that retains the zero-knowledge, (knowledge) soundness, and completeness of the abstract system. This can include automated optimizations, which are able to reorder the rows as needed without changing the meaning of the circuit.
 
-The optimizations suggested in this specification would be impractical or error-prone to do manually, because they rely on global optimization of the witness matrix layout. [TODO: make this more convincing or give examples.]
+The optimizations suggested in this specification would be impractical or error-prone to perform manually, as they require global reasoning about the witness layout. Without automation, ensuring correctness while reordering rows or applying offsets becomes fragile and difficult to scale, especially in the presence of copy constraints or lookups where subtle errors can silently break circuit soundness.
 
-## Preliminary definitions
+In this document, we:
+
+* **Define the concrete Plonkish relation**, intended for readers building a proving system or interactive oracle proof targeting the concrete Plonkish relation.
+
+* **Describe a correctness-preserving circuit translation**, for those verifying the optimizations introduced in this document.
+
+* **Specify the translation from an abstract to a concrete Plonkish relation**, aimed at implementers of the concrete relation.
+
+* **Prove that the translation preserves correctness**, again intended for readers verifying the soundness of the optimisations.
+
+## The Concrete Plonkish Relation
+
+The relation $\mathcal{R}_{\mathsf{concrete}}$ is an optimisation of $\mathcal{R}_{\mathsf{plonkish}}$.  We have highlighted differences using the icon ✨.
+
+### Instances
+
+$\mathcal{R}_{\mathsf{concrete}}$ takes instances of the following form:
+
+| Instance element  | Description |
+| ----------------- | ----------- |
+| $\mathbb{F}$      | A prime field. |
+| $C$               | The circuit. |
+| $\phi$            | The instance vector $\phi \mathrel{⦂} \mathbb{F}^{C.t}$ (where $t$ is the instance vector length defined below). |
+
+The circuit $C \mathrel{⦂} \mathsf{AbstractCircuit}_{\mathbb{F}}$ in turn has the following form:
+
+| Circuit element   | Description | Used in |
+| ----------------- | ----------- | ------- |
+| ✨ $d$                | Number of offsets.  |  |
+| ✨ $\mathsf{offsets}$ | Set of offsets enabling optimisations on the circuit stucture| [Custom constraints](#custom-constraints), [Lookup constraints](#lookup-constraints)
+| $t$               | Length of the instance vector. |  |
+| $n > 0$           | Number of rows for the witness matrix. |  |
+| $m > 0$           | Number of columns for the witness matrix. |  |
+| $\equiv$          | An equivalence relation on $[0,m) \times [0,n)$ indicating which witness entries are equal to each other. | [Copy constraints](#copy-constraints) |
+| $S$               | A set $S \subseteq ([0,m) \times [0,n)) \times [0,t)$ indicating which witness entries are equal to instance vector entries. | [Copy constraints](#copy-constraints) |
+| $m_f \leq m$      | Number of columns that are fixed. | [Fixed constraints](#fixed-constraints) |
+| $f$               | The fixed content of the first $m_f$ columns, $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$. | [Fixed constraints](#fixed-constraints) |
+| $p_u$             | ✨ Custom multivariate polynomials $p_u \mathrel{⦂} \mathbb{F}^{d \times m} \rightarrow \mathbb{F}$. | [Custom constraints](#custom-constraints) |
+| $\mathsf{CUS}_u$  | Sets $\mathsf{CUS}_u \subseteq [0,n)$ indicating rows on which the custom polynomials $p_u$ are constrained to evaluate to 0. | [Custom constraints](#custom-constraints) |
+| $L_v$             | Number of table columns in the lookup table with index $v$, $\mathsf{TAB}_v$. | [Lookup constraints](#lookup-constraints) |
+| $\mathsf{TAB}_v$  | Lookup tables $\mathsf{TAB}_v \subseteq \mathbb{F}^{L_v}$, each with a number of tuples in $\mathbb{F}^{L_v}$. | [Lookup constraints](#lookup-constraints) |
+| $q_{v,s}$         | ✨ Scaling multivariate polynomials $q_{v,s} \mathrel{⦂} \mathbb{F}^{d \times m} \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$. | [Lookup constraints](#lookup-constraints) |
+| $\mathsf{LOOK}_v$ | Sets $\mathsf{LOOK}_v \subseteq [0,n)$ indicating rows on which the scaling polynomials $q_{v,s}$ evaluate to some tuple in $\mathsf{TAB}_v$. | [Lookup constraints](#lookup-constraints) |
+
+Multivariate polynomials are defined below in the [Custom constraints](#custom-constraints) section.
+
+### Witnesses
+
+The relation $\mathcal{R}_{\mathsf{concrete}}$ takes witnesses of the following form:
+
+| Witness element   | Description |
+| ----------------- | -------- |
+| $w$               | The witness matrix $w \mathrel{⦂} \mathbb{F}^{m \times n}$. |
+
+✨ Define $\vec{w}_{j} \in \mathbb{F}^{n \times d}$ as the row vector $\big[\, w[i, j + \mathsf{offset}] : (i, \mathsf{offset}) \leftarrow (0 \text{..} n) \times \mathsf{offsets} \,\big]$.
+
+### Definition of the relation
+
+Given the above definitions, the relation $\mathcal{R}_{\mathsf{concrete}}$ corresponds to a set of $\,(\!$ instance $\!,\,$ witness $\!)\,$ pairs
+$$
+ \left(x = \left(\mathbb{F}, C = \left(d, \mathsf{offsets}, t, n, m, \equiv, S, m_f, f, \left[\, (p_u, \mathsf{CUS}_{u}) \,\right]_u, \left[\, (L_v, \mathsf{TAB}_v, \left[\, q_{v,s} \,\right]_s, \mathsf{LOOK}_v) \,\right]_v\right), \phi\right),\, w \right)
+$$
+such that:
+$$
+\begin{array}{ll|l}
+   w \mathrel{⦂} \mathbb{F}^{m \times n}, \ f \mathrel{⦂} \mathbb{F}^{m_f \times n} & & i \in [0,m_f), \ j \in [0,n) \Rightarrow w[i, j] = f[i, j] \\[0.3ex]
+   S \subseteq ([0,m) \times [0,n)) \times [0,t), \ \phi \mathrel{⦂} \mathbb{F}^t & & ((i,j),k) \in S \Rightarrow w[i, j] = \phi[k] \\[0.3ex]
+   \equiv\; \subseteq ([0,m) \times [0,n)) \times ([0,m) \times [0,n)) & & (i,j) \equiv (k,\ell) \Rightarrow w[i, j] = w[k, \ell] \\[0.3ex]
+   \mathsf{CUS}_u \subseteq [0,n), \ p_u \mathrel{⦂} \mathbb{F}^{d \times m} \rightarrow \mathbb{F} & & j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0 \\[0.3ex]
+   \mathsf{LOOK}_v \subseteq [0,n), \ q_{v,s} \mathrel{⦂} \mathbb{F}^{d \times m} \rightarrow \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
+\end{array}
+$$
+
+In this model, a circuit-specific relation $\mathcal{R}_{\mathbb{F}, C}$ for a field $\mathbb{F}$ and circuit $C$ is the relation $\mathcal{R}_{\mathsf{plonkish}}$ restricted to $\{ ((\mathbb{F}, C, \phi \mathrel{⦂} \mathbb{F}^{C.t}), w \mathrel{⦂} \mathbb{F}^{C.m \times C.n}) \}$.
+
+### Conditions satisfied by statements in $\mathcal{R}_{\mathsf{plonkish}}$
+
+There are four types of constraints that a Plonkish statement $(x, w) \in \mathcal{R}_{\mathsf{concrete}}$ must satisfy:
+
+* Fixed constraints
+* Copy constraints
+* Custom constraints
+* Lookup constraints
+
+An Interactive Oracle Proof for an optimised Plonkish constraint system must demonstrate that all of these contraints are satisfied by $\,(\!$ instance $\!,\,$ witness $\!) \in \mathcal{R}_{\mathsf{concrete}}\,$
+
+#### Fixed constraints
+
+The first $m_f$ columns of $w$ are fixed to the columns of $f$.
+
+#### Custom constraints
+
+In the concrete model we define here, a custom constraint applies to a set of offset rows relative to each row selected for that constraint.
+
+Custom constraints enforce that witness entries within a row satisfy some multivariate polynomial. Here $p_u$ could indicate any case that can be generated using a combination of multiplications and additions.
+
+| Custom Constraints | Description |
+| -------- | -------- |
+| $j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0$ | $u$ is the index of a custom constraint. $j$ ranges over the set of rows $\mathsf{CUS}_u$ <br> for which the custom constraint is switched on. |
+
+Here $p_u \mathrel{⦂} \mathbb{F}^{d \times m} \rightarrow \mathbb{F}$ is an arbitrary [multivariate polynomial](https://en.wikipedia.org/wiki/Polynomial_ring#Definition_(multivariate_case)):
+
+> Given $\eta$ symbols $X_0, \dots, X_{\eta-1}$ called indeterminates, a multivariate polynomial $P$ in these indeterminates, with coefficients in $\mathbb{F}$,
+> is a finite linear combination
+>
+> $P(X_0, \dots, X_{\eta-1}) = \sum_{z=0}^{\nu-1} \Big(c_z\, {\small\prod_{b=0}^{\eta-1}}\, X_b^{\alpha_{z,b}}\Big)$
+>
+>  where $\nu \mathrel{⦂} \mathbb{N}$, $c_z \mathrel{⦂} \mathbb{F} \neq 0$, and $\alpha_{z,b} \mathrel{⦂} \mathbb{N}$.
+
+#### Lookup constraints
+
+Lookup constraints enforce that some polynomial function of the witness entries on a row are contained in some table.
+In this specification, we only support fixed lookup tables determined in advance. This could be generalized to support dynamic tables determined by part of the witness matrix.
+
+| Lookup Constraints | Description |
+| -------- | -------- |
+| $j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v$ | $v$ is the index of a lookup table. $j$ ranges over the set of rows $\mathsf{LOOK}_v$ <br> for which the lookup constraint is switched on. |
+
+Here $q_{v,s} \mathrel{⦂} \mathbb{F}^{d \times m} \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$ are multivariate polynomials that collectively map the witness entries $\vec{w}_j$ on the lookup row $j \in \mathsf{LOOK}_v$ to a tuple of field elements. This tuple will be constrained to match some row of the table $\mathsf{TAB}_v$.
+
+#endregion
+
+## Notation
 
 If not otherwise defined, variable names used here are consistent with [the relation description](relation.md).
 
 We will use the convention that variables marked with a prime ($'$) refer to *concrete* column or row indices.
 
-For brevity when referring to variables dependent on an abstract circuit such as $C.t$, we will elide the $C.$ and just refer to $t$ when $C$ is obvious from context.
+For brevity when referring to variables dependent on an abstract circuit such as $C.t$, we will omit the $C.$ and just refer to $t$ when $C$ is obvious from context.
 
-Similarly, when referring to variables dependent on a concrete circuit such as $C'.t'$, we will elide the $C'.$ and just refer to $t'$ when $C'$ is obvious from context.
+Similarly, when referring to variables dependent on a concrete circuit such as $C'.t'$, we will omit the $C'.$ and just refer to $t'$ when $C'$ is obvious from context.
 
 An "abstract cell" specifies an entry in the witness matrix $w$ of the abstract circuit. A "concrete cell" specifies an entry in the witness matrix $w'$ of the concrete circuit.
 
@@ -43,6 +165,8 @@ $P(\vec{w}_j)$ "has support involving" its variable at index $i$, that is $w[i, 
 
 ## Correctness-preserving translation of circuits
 
+We define a correctness-preserving translation of circuits—this serves as the security notion that our optimizations must satisfy to ensure they do not introduce vulnerabilities.
+
 For simplicity fix a field $\mathbb{F}$. What we mean by a correctness-preserving translation $\mathcal{T} \mathrel{⦂} \mathsf{AbstractCircuit}_{\mathbb{F}} \rightarrow \mathsf{ConcreteCircuit}_{\mathbb{F}}$ is that $\mathcal{T}$ is an efficiently computable function from abstract circuits to concrete circuits, such that for any abstract circuit $C$ with $C' = \mathcal{T}(C)$:
   * There is a bijective map $\mathcal{I}_C \mathrel{⦂} \mathbb{F}^{t} \rightarrow \mathbb{F}^{t'}$, efficiently computable in both directions, between abstract instances and concrete instances.
   * There is an efficient witness translation function $\mathcal{F}_C \mathrel{⦂} \mathbb{F}^{m \times n} \rightarrow \mathbb{F}^{m' \times n'}$ from abstract witnesses to concrete witnesses.
@@ -52,6 +176,7 @@ For simplicity fix a field $\mathbb{F}$. What we mean by a correctness-preservin
 We also claim that a correctness-preserving translation in this sense, when used with a concrete proof system that is zero-knowledge, necessarily yields an overall proof system for the abstract relation that is zero-knowledge. That is, informally, no additional information about the abstract witness is revealed beyond the fact that the prover knows such a witness.
 
 > Aside: we could have required there to be an efficient reverse witness translation function $\mathcal{F}'_C \mathrel{⦂} \mathbb{F}_C^{m' \times n'} \rightarrow \mathbb{F}_C^{m \times n}$ from concrete witnesses to abstract witnesses, and then used $w = \mathcal{F}'_C(w')$ in the definition of knowledge soundness preservation. We do not take that approach because strictly speaking it would be an overspecification: we do not need the satisfying abstract witness to be *deterministically* and efficiently computable from the concrete witness; we only need it to be efficiently computable. Also, in general $w$ could also depend on the instance $x'$, not just $w'$. In practice, specifying such a function $\mathcal{F}'_C$ is likely to be the easiest way to prove knowledge soundness preservation.
+
 
 ## A model for a class of abstract-to-concrete translations and their correctness
 
@@ -68,24 +193,14 @@ In our model, the abstract witness matrix $w$ consists of $m$ abstract columns, 
 | ------------------ | -------- |
 | output circuit     | This is like the input circuit but also supports applying the polynomials to cells on offset rows. |
 
-### Adapting $\mathcal{R}_{\mathsf{plonkish}}$ to concrete circuits
 
-To define a relation for concrete circuits, it is necessary to directly handle row offsets.
 
-Let $\mathsf{offsets}$ be the sequence of row offsets that are available to be used in concrete gates and concrete lookups.
-
-Informally, we define $\mathcal{R}_{\mathsf{concrete}}$ to be $\mathcal{R}_{\mathsf{plonkish}}$ with the following changes:
-
-* $\vec{w}'_{j'}$ is defined as the row vector $\big[\, w'[i', j' + \mathsf{offset}] : (i', \mathsf{offset}) \leftarrow (0 \text{..} n') \times \mathsf{offsets} \,\big]$.
-* $p'_u$ and $q'_{v,s}$ are each of type $\mathbb{F}^{\,\mathsf{windowsize}} \rightarrow \mathbb{F}$ where $\mathsf{windowsize} = m' \,\cdot\; \#\mathsf{offsets}$, instead of $\mathbb{F}^m \rightarrow \mathbb{F}$. They are applied to $\vec{w}'_{j'}$ as just defined instead of $\vec{w}_j$.
-
-We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).
 
 ### Hints
 
 Offsets are represented by hints $\big[\, (h_i, e_i) \,\big]$. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
 
-For simplicity we require that $i < m_f \Rightarrow h_i < m'_f$, i.e. the concrete circuit follows the same rule as the abstract circuit that fixed columns are on the left.
+For simplicity we require that $i < m_f \Rightarrow h_i < m'_f$, i.e. the concrete circuit follows the same rule as the abstract circuit that fixed columns are on the left.  We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).
 
 Tesselation between custom constraints is just represented by equivalence under $\equiv$. When the offset hints indicate that two concrete cells in the same column are equivalent, the backend can optimize overall circuit area by reordering the rows so that the equivalent cells overlap.
 
@@ -109,9 +224,7 @@ $$
 
 Then, the overall correctness condition is that $\mathbf{r}$ must be chosen such that $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$. We claim that this implies the more general definition of correctness preservation for this family of translations.
 
-> Proof sketch [TODO remove handwaving]:
->
-> $\mathcal{I}$ is the identity function and $\mathcal{F}$ is described below. $\mathcal{F}$, $\mathcal{I}$, and $\mathcal{I}^{-1}$ are obviously efficiently computable. Given that the concrete custom constraints and lookups are just the abstract constraints and lookups modified to access the same witness values in their translated locations (and the translation mapping is bijective), preservation of completeness follows immediately. Preservation of knowledge soundness holds because, informally, we can invert the coordinate translation defined by $\mathcal{F}$ to reconstruct all of the abstract witness cells that are needed to satisfy the abstract relation.
+<span style="color:red">Mary:  The overall correctness condition is with respect to what R? I can gather that the goal is to ensure that no copy constraints are required in the R part of the circuit?  We should state this somewhere. </span>
 
 Discussion: It is alright if one or more *unconstrained* abstract cells map to the same concrete cell as a constrained abstract cell, because that will not affect the meaning of the circuit. Notice that specifying $\equiv$ as an equivalence relation helps to simplify this definition (as compared to specifying it as a set of copy constraints), because an equivalence relation is by definition symmetric, reflexive, and transitive.
 
