@@ -288,12 +288,13 @@ $$
 $$
 takes as input an abstract circuit and a set of designer-provided hints $(C, \mathsf{hints}) \in \mathsf{AbstractCircuit} \times \mathsf{Hints}$.  The domain of abstract circuits, $\mathsf{AbstractCircuit}$, is defined formally in the description of the relation $\mathcal{R}_{\mathsf{plonkish}}$.  The domain of offset hints, $\mathsf{Hints}$, is defined in the following section.
 
-It returns $(d', \mathsf{offsets}', m', n', \mathsf{coord\_map})$ such that :
+It returns $(d', \mathsf{offsets}', m', m_f', n', \mathsf{coord\_map})$ such that :
 - $d' \in \mathbb{N}$ is the number of offsets
 - $\mathsf{offsets}' \in \mathbb{Z}^{d}$ are the offsets
-- $m' \in \mathbb{N}$ is the number of concrete rows,
-- $n' \in \mathbb{N}$ is the number of concrete columns,
-- the coordinate mapping function
+- $m' \in \mathbb{N}$ is the number of concrete columns,
+- $m_f' \leq m'$ is the number of concrete columns that are fixed,
+- $n' \in \mathbb{N}$ is the number of concrete rows,
+- the coordinate mapping function  
   $$
   \mathsf{coord\_map} : [0, m) \times [0, n) \to [0, m') \times [0, n')
   $$
@@ -305,14 +306,16 @@ To translate the abstract circuit to a concrete circuit using the hints, we cons
 
 ### Hints
 
-The domain $\mathsf{Hints}$ represents collections of designer-provided **offset hints**. Each hint assigns to a row index $i \in [0, m)$:
+The domain $\mathsf{Hints}$ represents collections of designer-provided **offset hints**. Each hint assigns to a column index $i \in [0, m)$:
 
-- a target row hint $h_i \in [0, m)$, and
-- an offset expression $e_i \in \mathbb{Z}$.
+- a target column hint $h_i \in [0, m)$, and
+- a row offset expression $e_i \in \mathbb{Z}$,
+
+where for each column $i$ mapped to $h_i$, either $i$ and $h_i$ are both fixed abstract column indices $\in [0, m_f)$ or they are both non-fixed abstract column indices $\in [m_f, m)$.
 
 We define:
 $$
-\mathsf{Hints} = \left( [0, m) \times \mathbb{Z} \right)^m
+\mathsf{Hints} = \left\{ i \mapsto (h_i : [0, m), e_i : \mathbb{Z}) \;|\; (i < m_f \text{ and } h_i < m_f) \text{ or } (i \geq m_f \text{ and } h_i \geq m_f) \right\}
 $$
 that is, the set of length-$m$ sequences
 $$
@@ -320,11 +323,11 @@ $$
 $$
 where each entry $\mathsf{hints}[i]$ specifies a row hint and an offset for index $i$.
 
-Thus $\mathsf{hints}[i] = (h_i, e_i)$  specifies:
-- $h_i \in [0, m)$: a row hint, representing a target row index
-- $e_i \in \mathbb{Z}$: an offset expression (e.g., a symbolic shift)
+Thus $\mathsf{hints}[i] = (h_i, e_i)$ specifies:
+- $h_i \in [0, m)$: a column hint, representing a target column index
+- $e_i \in \mathbb{Z}$: a row offset expression (e.g., a symbolic shift)
 
-These hints guide the construction of the final coordinate map by specifying where (in rows) abstract elements prefer to appear and how to offset their placement in columns.
+These hints guide the construction of the final coordinate map by specifying where (in columns) abstract elements prefer to appear and how to offset their placement in rows.
 
 ### Function $\mathsf{compute\_coord\_map}$ to compute the coordinate mapping
 
@@ -350,7 +353,7 @@ It relies on two subroutines, whose input/output behavior is specified here. The
 |-------------------------------------|
 | set $\mathsf{offsets} := \big\{\, e_i : (h_i, e_i) \in \mathsf{hints} \,\big\}$ |
 | set $d':=$ size of $\mathsf{offsets}$ |
-| set $m' := \max \big\{\, h_i : (h_i, e_i) \in \mathsf{hints} \,\big\}$ + 1 |
+| TODO: This is wrong, we need to eliminate unused columns instead of truncating them. set $m' := \max \big\{\, h_i : (h_i, e_i) \in \mathsf{hints} \,\big\}$ + 1 |
 | set $\mathbf{r} := \{\}$ |
 | set $a' := 0$ |
 | for $g$ from $0$ to $n - 1$: |
