@@ -45,6 +45,6 @@ The team will meet once every two weeks during 2024 and aims to have an initial 
 
 ## Resources
 - [The Halo2 Book](https://zcash.github.io/halo2/concepts/arithmetization.html)
-- [UltraPlonk Arithmetisation](https://docs.zkproof.org/pages/standards/accepted-workshop3/proposal-turbo_plonk.pdf)
+- [Proposal: The Turbo-PLONK program syntax for specifying SNARK programs](https://docs.zkproof.org/pages/standards/accepted-workshop3/proposal-turbo_plonk.pdf)
 - [Plaf format](https://github.com/Dhole/polyexen/blob/master/plaf.md)
 - [Lean 4](https://lean-lang.org/)
