@@ -34,7 +34,7 @@ $\mathcal{R}_{\mathsf{concrete}}$ takes instances of the following form:
 | $C$               | The circuit. |
 | $\phi$            | The instance vector $\phi \mathrel{⦂} \mathbb{F}^{C.t}$ (where $t$ is the instance vector length defined below). |
 
-The circuit $C \mathrel{⦂} \mathsf{AbstractCircuit}_{\mathbb{F}}$ in turn has the following form:
+The circuit $C \mathrel{⦂} \mathsf{ConcreteCircuit}_{\mathbb{F}}$ in turn has the following form:
 
 | Circuit element   | Description | Used in |
 | ----------------- | ----------- | ------- |
@@ -175,15 +175,295 @@ We also claim that a correctness-preserving translation in this sense, when used
 
 > Aside: we could have required there to be an efficient reverse witness translation function $\mathcal{F}'_C \mathrel{⦂} \mathbb{F}_C^{m' \times n'} \rightarrow \mathbb{F}_C^{m \times n}$ from concrete witnesses to abstract witnesses, and then used $w = \mathcal{F}'_C(w')$ in the definition of knowledge soundness preservation. We do not take that approach because strictly speaking it would be an overspecification: we do not need the satisfying abstract witness to be *deterministically* and efficiently computable from the concrete witness; we only need it to be efficiently computable. Also, in general $w$ could also depend on the instance $x'$, not just $w'$. In practice, specifying such a function $\mathcal{F}'_C$ is likely to be the easiest way to prove knowledge soundness preservation.
 
+## Efficiency improvements achieved by the abstract-to-concrete translations
+
+These translations aim to improve circuit efficiency in the following ways:
+
+1) Reduce the number of concrete columns.  Each set of offset columns can be represented using a single concrete witness column.  The number of witness columns impacts the size of the resulting zero-knowledge proof.
+2) <span style="color:red">Mary:  Why do regions matter, and how do they improve efficiency? </span>
+3) Reduce the overall circuit area:  When offset hints identify abstract cells as equivalent, the backend can optimize layout by reordering rows so that equivalent cells overlap in the concrete matrix, minimizing unused space.
 
 ## A model for a family of abstract-to-concrete translations and their correctness-preservation
 
-We present a specific model for a family of translations from abstract to concrete circuits, along with a criterion to ensure that such translations preserve correctness in the sense defined above. This model does not aim to capture all possible correctness-preserving translations.
+```
++--------------------+  +-------------------+  +-------------------+
+| translate_instance |  | translate_witness |  | translate_circuit |
++--------------------+  +-------------------+  +-------------------+
+          ^                        ^                     ^
+          |                        |                     |
+          +------------------------+---------------------+
+                                   |
+                             +-----------+
+                             | coord_map |
+                             +-----------+
+                                   ^
+                                   |
+                        +-----------------------+
+                        |   compute_coord_map   |
+                        | (uses designer hints) |
+                        +-----------------------+
+```
 
-In our model:
+We propose a specific model for translating abstract circuits to concrete circuits, along with a correctness criterion that ensures such translations preserve the intended semantics. This model is not intended to capture all correctness-preserving translations, but rather to define one principled approach within that broader space.
 
-* The abstract witness matrix $w$ has $m$ abstract columns.
-* The concrete witness matrix $w'$ has $m'$ columns, of which the first $m'_f$ are fixed.
+To translate from abstract Plonkish to concrete Plonkish circuits, we introduce the following high-level functions:
+* $\mathsf{translate\_circuit}$
+* $\mathsf{translate\_instance}$
+* $\mathsf{translate\_witness}$
+
+Each of the functions $\mathsf{translate\_instance}$, $\mathsf{translate\_witness}$, and $\mathsf{translate\_circuit}$ depends on a coordinate mapping function, $\mathsf{coord\_map}$.
+
+The function
+$$
+\mathsf{coord\_map} : [0, m) \times [0, n) \to [0, m') \times [0, n')
+$$
+is derived from design-time hints provided by the circuit author. To compute it, we define the function $\mathsf{compute\_coord\_map}$.  Here $m'$ and $n'$ are the number of concrete rows and columns respectively, with $m' \leq m$ and $n' \geq n$.
+
+### Function $\mathsf{translate\_circuit}$ to translate the relation
+
+The function
+$$
+\mathsf{translate\_circuit} : \mathsf{AbstractCircuit} \mapsto \mathsf{ConcreteCircuit}
+$$
+translates abstract Plonkish circuits to concrete Plonkish circuits.
+
+The function
+$$
+\mathsf{translate\_circuit} : \mathsf{AbstractCircuit} \mapsto \mathsf{ConcreteCircuit}
+$$
+translates abstract Plonkish circuits to concrete Plonkish circuits.  Given $C \in \mathsf{AbstractCircuit}$ and hints $\mathsf{hints}$ it behaves as follows:
+
+1) $(d', \mathsf{offsets}, m', n') := \mathsf{compute\_coord\_map}(C, \mathsf{hints} )$
+2) $t' := t$
+3) $\equiv$
+4) $S$
+5) $m_f'$
+6) $f'$
+7) $p_u'$ $
+j' \in \mathsf{CUS}'_u \Rightarrow p_u\!\left(\big[\, w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m \,\big]\right) = 0
+$
+8) $\mathsf{CUS}_u' :=  \big\{\, \mathbf{r}(j) : j \in \mathsf{CUS}_u \,\big\}$
+9)  $L_v'$
+10) $\mathsf{TAB}_v'$
+11) $q_{v,s}'$
+12) $\mathsf{LOOK}_v'$
+
+
+## Computing function $\mathsf{coord\_map}$ that gives the coordinate mapping
+
+```
+                             +-----------+
+                             | coord_map |
+                             +-----------+
+                                   ^
+                                   |
+                        +-----------------------+
+                        |   compute_coord_map   |
+                        | (uses designer hints) |
+                        +-----------------------+
+                                   ^
+                                   |
+                        +--------------------+
+                        |                    |
+                   +--------+                |
+                   | ok_for |                |
+                   +--------+                |
+                        ^                    |
+                        |                    |
+              +------------------------------+
+              |                              |
+    +-------------------+             +-------------+
+    | working_coord_map |             | constrained |
+    +-------------------+             +-------------+
+```
+
+
+The function
+$$
+\mathsf{compute\_coord\_map}
+$$
+takes as input an abstract circuit and a set of designer-provided hints $(C, \mathsf{hints}) \in \mathsf{AbstractCircuit} \times \mathsf{Hints}$.  The domain of abstract circuits, $\mathsf{AbstractCircuit}$, is defined formally in the description of the relation $\mathcal{R}_{\mathsf{plonkish}}$.  The domain of offset hints, $\mathsf{Hints}$, is defined in the following section.
+
+It returns $(d', \mathsf{offsets}', m', n', \mathsf{coord\_map})$ such that :
+- $d' \in \mathbb{N}$ is the number of offsets
+- $\mathsf{offsets}' \in \mathbb{Z}^{d}$ are the offsets
+- $m' \in \mathbb{N}$ is the number of concrete rows,
+- $n' \in \mathbb{N}$ is the number of concrete columns,
+- the coordinate mapping function
+  $$
+  \mathsf{coord\_map} : [0, m) \times [0, n) \to [0, m') \times [0, n')
+  $$
+   assigns concrete coordinates to each abstract cell position.
+
+To translate the abstract circuit to a concrete circuit using the hints, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, such that:
+* all *constrained* abstract cells map to concrete cell coordinates that are in range;
+* every *constrained* abstract cell is represented by a distinct concrete cell, except that abstract cells that are equivalent under $\equiv$ *may* be identified.
+
+### Hints
+
+The domain $\mathsf{Hints}$ represents collections of designer-provided **offset hints**. Each hint assigns to a row index $i \in [0, m)$:
+
+- a target row hint $h_i \in [0, m)$, and
+- an offset expression $e_i \in \mathbb{Z}$.
+
+We define:
+$$
+\mathsf{Hints} = \left( [0, m) \times \mathbb{Z} \right)^m
+$$
+that is, the set of length-$m$ sequences
+$$
+\mathsf{hints} : [0, m) \to [0, m) \times \mathbb{Z}
+$$
+where each entry $\mathsf{hints}[i]$ specifies a row hint and an offset for index $i$.
+
+Thus $\mathsf{hints}[i] = (h_i, e_i)$  specifies:
+- $h_i \in [0, m)$: a row hint, representing a target row index
+- $e_i \in \mathbb{Z}$: an offset expression (e.g., a symbolic shift)
+
+These hints guide the construction of the final coordinate map by specifying where (in rows) abstract elements prefer to appear and how to offset their placement in columns.
+
+### Function $\mathsf{compute\_coord\_map}$ to compute the coordinate mapping
+
+The function $\mathsf{compute\_coord\_map}$ computes the coordinate mapping $\mathsf{coord\_map}$ used as a subroutine in $\mathsf{translate\_instance}$, $\mathsf{translate\_witness}$, and $\mathsf{translate\_circuit}$.
+
+It relies on two subroutines, whose input/output behavior is specified here. Their internal definitions will follow in subsequent sections.
+
+- The function
+  $$
+  \mathsf{constrained} : \mathsf{AbstractCircuit} \times [0, m) \times [0, n) \to \{\mathsf{true}, \mathsf{false}\}
+  $$
+  returns whether a cell $(i, j)$ is constrained — for example, if it lies in a fixed column or participates in a copy, custom, or lookup constraint.
+
+- The function
+  $$
+  \mathsf{ok\_for} : \mathsf{AbstractCircuit} \times \mathsf{Hints} \times \{ R \subseteq [0, n) \} \times ([0, n) \to [0, n'))  \to \{\mathsf{true}, \mathsf{false}\}
+  $$
+  returns whether the partial mapping $\mathbf{r}$ is valid for the set $R$ with respect to the given hints.
+
+---
+
+| $\mathsf{compute\_coord\_map}(C, \mathsf{hints}))$ |
+|-------------------------------------|
+| set $\mathsf{offsets} := \big\{\, e_i : (h_i, e_i) \in \mathsf{hints} \,\big\}$ |
+| set $d':=$ size of $\mathsf{offsets}$ |
+| set $m' := \max \big\{\, h_i : (h_i, e_i) \in \mathsf{hints} \,\big\}$ + 1 |
+| set $\mathbf{r} := \{\}$ |
+| set $a' := 0$ |
+| for $g$ from $0$ to $n - 1$: |
+| $\hspace{2em}$ find the minimal $g' \geq a'$ such that $\mathsf{ok\_for}(C, \mathsf{hints}, [0, g],\; \mathbf{r} \cup \{ g \mapsto g' \} ) = \mathsf{true}$ |
+| $\hspace{2em}$ set $\mathbf{r} := \mathbf{r} \cup \{ g \mapsto g' \}$ and $a' := g' + 1$ |
+| set $n' := \max \left\{\, \mathbf{r}(j) + e_i : (i, j) \in [0, m) \times [0, n),\; \mathsf{constrained}(C, i, j) \,\right\} + 1$ |
+| set $\mathsf{coord\_map} \mathrel{\mathop:} [0, m) \times [0, n) \to [0, m') \times [0,n')$ such that $(i, j) \mapsto (h_i,\; \mathbf{r}(j) + e_i)$ |
+| return ($d'$, $\mathsf{offsets}$, $m'$, $n'$, $\mathsf{coord\_map}$)|
+
+---
+
+The algorithm computes:
+- The set $\mathsf{offsets}$ of unique offsets $e_i$ appearing in the hints.
+- The size $d'$ of the $\mathsf{offsets}$
+- The number of concrete rows $m'$ as one more than the maximum $h_i$ appearing in the hints.
+- A strictly increasing function $\mathbf{r} : [0, n) \to [0, n')$ that maps abstract to concrete column indices.
+- The number of concrete columns $n'$ as one more than the maximum $\mathbf{r}(j) + e_i$ across all constrained cells $(i, j)$.
+
+The mapping $\mathsf{coord\_map}$ is then defined by:
+$$
+\mathsf{coord\_map}(i, j) = (h_i,\; \mathbf{r}(j) + e_i)
+$$
+
+A greedy strategy is used to construct $\mathbf{r}$ incrementally while maintaining strict monotonicity. At each step, the algorithm selects the smallest $g' \geq a'$ such that extending $\mathbf{r}$ with $g \mapsto g'$ preserves the validity of all previous assignments, as checked by $\mathsf{ok\_for}$.
+
+**Correctness guarantee.**
+The algorithm always succeeds in finding such a $g'$ at each step. Since there is no upper bound on $g'$, we can always find one large enough to avoid conflicts. Specifically, when assigning $\mathbf{r}(g) = g'$, it suffices to ensure that:
+$$
+(h_i,\; g' + e_i) \neq (h_k,\; \mathbf{r}(\ell) + e_k)
+$$
+for all $\ell < g$ and all $i, k \in [0, m)$ such that both $(i, g)$ and $(k, \ell)$ are constrained. This ensures non-overlapping coordinate assignments for constrained cells.
+
+
+### Function $\mathsf{constrained}$ to check if cells are constrained
+
+We now define the function
+$$
+\mathsf{constrained} : \mathsf{AbstractCircuit} \times [0, m) \times [0, n) \to \{ \mathsf{true}, \mathsf{false} \}
+$$
+which was used in the $\mathsf{compute\_coord\_map}$ algorithm to determine whether a given abstract cell $(i, j)$ must be assigned a coordinate in the final layout.
+
+This function returns $\mathsf{true}$ if and only if the cell $w[i, j]$ is involved in any fixed value, equality, custom constraint, or lookup constraint.
+
+---
+
+In the abstract circuit $C \in \mathsf{AbstractCircuit}$, let each custom constraint polynomial $p_u : \mathbb{F}^m \to \mathbb{F}$ be written as
+$$
+p_u(\vec{w}_j) = \sum_{z=0}^{\nu - 1} \sum_{i=0}^{m - 1} \alpha_{u,z,i} \cdot m_{z,i}(\vec{w}_j),
+$$
+and similarly, each lookup constraint polynomial $q_{v,s} : \mathbb{F}^m \to \mathbb{F}$ is written as
+$$
+q_{v,s}(\vec{w}_j) = \sum_{z=0}^{\nu - 1} \sum_{i=0}^{m - 1} \beta_{v, s,z,i} \cdot n_{z,i}(\vec{w}_j),
+$$
+where $m_{z,i}$ and $n_{z,i}$ are monomials in the vector $\vec{w}_j$, and $\alpha_{u,z,i}, \beta_{v,s,z,i} \in \mathbb{F}$ are the corresponding coefficients.
+
+___
+
+| $\mathsf{constrained}(C, i, j )$ |
+|-------------------------------------|
+| check if $i < m_f$ |
+| check if $\exists (k, \ell) \neq (i, j) : (i, j) \equiv (k, \ell)$ |
+| check if $\exists k : S[k] = (i, j)$ |
+| check if $\exists u : j \in \mathsf{CUS}_u$ and $\exists z \in [0, \nu)$  such that $\alpha_{u,z,i} > 0$ |
+| check if $\exists v, s : j \in \mathsf{LOOK}_v$ and $\exists z \in [0, \nu)$ such that $\beta_{v,s,z,i} > 0$ |
+| if any check passes then return $\mathsf{true}$  |
+| else return $\mathsf{false}$|
+
+In other words, a cell $w[i, j]$ is considered constrained if it either contains a fixed value, participates in equality or permutation constraints, or contributes (with nonzero coefficient) to a custom or lookup constraint polynomial applied to column $j$.
+
+
+
+### Function $\mathsf{ok\_for}$ to check if current offsets are OK.
+
+We now define the function
+$$
+\mathsf{ok\_for} : \mathsf{AbstractCircuit} \times \mathsf{Hints} \times \{ R \subseteq [0, n) \} \times ([0, n) \to [0, n'))  \to \{\mathsf{true}, \mathsf{false}\}
+$$
+that returns whether the partial mapping $\mathbf{r}$ is valid for the set $R$ with respect to the given hints.
+
+It relies on the subroutine
+  $$
+  \mathsf{working\_coord\_map} : \mathsf{Hints} \times ([0, n) \to [0, n')) \times [0, m) \times [0, n) \to \mathbb{N} \times \mathbb{N}
+  $$
+that takes as input a set of hints, an offset function $\mathbf{r}, and coordinates $(i,j)$ and behaves as follows
+
+| $\mathsf{working\_coord\_map}(\mathsf{hints}, \mathbf{r}, i, j )$ |
+|-------------------------------------|
+| set $(h_i, e_i) := \mathsf{hints}[i]$ |
+| set $i' := h_i$ |
+| set $j' := \mathbf{r}(j) + e_i$ |
+| return $(i', j')$|
+
+
+
+We now specify $\mathsf{ok\_for}$ that checks that constrained cells have unique coordinates in the concrete circuit.
+
+| $\mathsf{ok\_for}(C, \mathsf{hints}, R,  \mathbf{r},  )$ |
+|-------------------------------------|
+| set $m' := \max \big\{\, h_i : (h_i, e_i) \in \mathsf{hints} \,\big\} + 1$|
+| set $m:=$ the number of hints|
+| for $(i,j) \in [0,m) \times R$ and for $(k, \ell) \in [0,m) \times R$: |
+| $\hspace{2em}$ if $\mathsf{constrained}(C, i, j):$ |
+| $\hspace{4em}$ check $\mathsf{working\_coord\_map}(\mathsf{hints}, \mathbf{r}, i, j) \in [0,m') \times \mathbb{N}$|
+| $\hspace{4em}$ if $\mathsf{constrained}(C, k, \ell)$ and $(i,j) \neq (k, \ell):$|
+| $\hspace{6em}$ check $\mathsf{working\_coord\_map}(\mathsf{hints}, \mathbf{r}, i, j) \neq \mathsf{working\_coord\_map}(\mathsf{hints}, \mathbf{r}, k, \ell)$|
+| return $\mathsf{true}$ if all checks pass|
+| else return $\mathsf{false}$|
+
+We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).  Tesselation between custom constraints is represented by equivalence under $\equiv$.
+
+Discussion: It is alright if one or more *unconstrained* abstract cells map to the same concrete cell as a constrained abstract cell, because that will not affect the meaning of the circuit. Notice that specifying $\equiv$ as an equivalence relation helps to simplify this definition (as compared to specifying it as a set of copy constraints), because an equivalence relation is by definition symmetric, reflexive, and transitive.
+
+
+
+## Translating the circuits
+
+We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).  Tesselation between custom constraints is represented by equivalence under $\equiv$.
 
 A translation from an abstract to a concrete circuit takes the following inputs:
 
@@ -199,52 +479,11 @@ And produces:
 | output circuit     | A version of the input circuit that supports assigning polynomials to cells on offset rows. |
 
 
-### Efficiency improvements achieved by the abstract-to-concrete translations
+In our model:
 
-These translations aim to improve circuit efficiency in the following ways:
+* The abstract witness matrix $w$ has $m$ abstract columns.
+* The concrete witness matrix $w'$ has $m'$ columns, of which the first $m'_f$ are fixed.
 
-1) Reduce the number of concrete columns.  Each set of offset columns can be represented using a single concrete witness column.  The number of witness columns impacts the size of the resulting zero-knowledge proof.
-2) Reduce the number of copy constraints.  The concrete witness is divided into regions, and copy constraints are only allowed within regions - not between them.  <span style="color:red">Mary:  Why does this help??? </span>
-3) Reduce the overall circuit area:  When offset hints identify abstract cells as equivalent, the backend can optimize layout by reordering rows so that equivalent cells overlap in the concrete matrix, minimizing unused space.
-
-### Hints
-
-Offsets are represented by hints $\big[\, (h_i, e_i) \,\big]$. 
-
-The hints are provided by the circuit designer and verified by the translation process. These hints are valid if they satisfy the following:
-
-* **Fixed-column consistency**: $i < m_f \Rightarrow h_i < m'_f$, i.e. the concrete circuit follows the same rule as the abstract circuit that fixed columns are on the left.  
-* **Semantics preservation**:  The hints do not affect the meaning of a circuit, i.e., the set of public inputs for which it is satisfiable, and the knowledge required to find a witness. 
-  <span style="color:red">Mary:  This is not concrete??? </span>
-  
-We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).  Tesselation between custom constraints is represented by equivalence under $\equiv$. 
-
-### Translating the circuits
-To translate the abstract circuit to a concrete circuit using the hints $\big[\, (h_i, e_i) \,\big]_i$, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, $\mathbf{r} \mathrel{⦂} [0, n) \rightarrow [0, n')$ with $n' \geq n$, such that the abstract cell with coordinates $(i, j)$ maps to the concrete cell with coordinates $(h_i, \mathbf{r}(j) + e_i)$, where:
-* all *constrained* abstract cells map to concrete cell coordinates that are in range;
-* every *constrained* abstract cell is represented by a distinct concrete cell, except that abstract cells that are equivalent under $\equiv$ *may* be identified.
-
-For given hints $\mathsf{hints} = \big[\, (h_i, e_i) \mathrel{⦂} [0, m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$, define the coordinate mapping $\mathsf{coord\_map} \mathrel{⦂} [0, m) \times [0, n) \rightarrow [0, m') \times \mathbb{Z}$ as
-$$
-\mathsf{coord\_map}[i, j] = (h_i, \mathbf{r}(j) + e_i) \tag{1}
-$$
-
-Then, for $R \subseteq [0, n)$ and $\mathsf{hints}$ as above, define
-$$
-\begin{array}{rcl}
-\mathsf{ok\_for}(R, \mathbf{r}, \mathsf{hints}) &=& \forall (i, j), (k, \ell) \in ([0, m) \times R) \times ([0, m) \times R) :\\[0.5ex]
-&& \hspace{2em} (\mathsf{constrained}[i, j] \;\Rightarrow\; \mathsf{coord\_map}[i, j] \in [0, m') \times \mathbb{N} \;\;\wedge\; \\[0.3ex]
-&& \hspace{2em} (\mathsf{constrained}[i, j] \;\wedge\; \mathsf{constrained}[k, \ell] \;\wedge\; (i, j) \not\equiv (k, \ell) \;\Rightarrow\; \mathsf{coord\_map}[i, j] \neq \mathsf{coord\_map}[k, \ell]) \\
-\end{array}
-$$
-
-Then, the overall correctness condition is that $\mathbf{r}$ must be chosen such that $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$. We provide an algorithm for finding $\mathbf{r}$ shortly.
-
-Discussion: It is alright if one or more *unconstrained* abstract cells map to the same concrete cell as a constrained abstract cell, because that will not affect the meaning of the circuit. Notice that specifying $\equiv$ as an equivalence relation helps to simplify this definition (as compared to specifying it as a set of copy constraints), because an equivalence relation is by definition symmetric, reflexive, and transitive.
-
-Recall from the [relation definition](relation.md#copy-constraints) that fixed abstract cells with the same value are considered to be equivalent under $\equiv$. This allows a fixed column to be specified as a rotation of another fixed column, which can be useful to reduce the number of fixed concrete columns used by the concrete circuit.
-
-Since correctness does not depend on the specific hints provided by the circuit programmer, it is also valid to use any subset of the provided hints, or to infer hints that were not provided.
 
 ### Witness translations
 
@@ -278,23 +517,21 @@ $$
 j' \in \mathsf{LOOK}'_v \Rightarrow \big[\, q_{v,s}\!\left(\big[\,w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m \,\big]\right) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
 $$
 
-### Greedy algorithm for choosing $\mathbf{r}$
 
-There is a greedy algorithm for deterministically choosing $\mathbf{r}$ that maintains ordering of rows (i.e. $\mathbf{r}$ is strictly increasing), and simply inserts a gap in the row mapping whenever the above constraint would not be met for all rows so far.
-
-| Algorithm for choosing $\mathbf{r}$ |
-|----|
-| set $\mathbf{r} := \{\}$ |
-| set $a' := 0$ |
-| for $g$ from $0$ up to $n-1$: |
-| $\hspace{2em}$ find the minimal $g' \geq a'$ such that $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ |
-| $\hspace{2em}$ set $\mathbf{r} := \mathbf{r} \cup \{g \mapsto g'\}$ and $a' := g'+1$ |
-
-The number of concrete rows is then given by $n' = \max \big\{\, \mathbf{r}(j) + e_i : (i, j) \in ([0, m) \times [0, n)) \;\wedge\; \mathsf{constrained}(i, j) \,\big\} + 1$. The number of concrete columns $m'$ is implied by the type of $\mathsf{hints}$.
-
-Note that for each step it is always possible to find a suitable $g'$: there is no upper bound on $g'$, and so we can always choose it large enough that any additional conditions of $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ relative to $\mathsf{ok\_for}([0, g-1], \mathbf{r}, \mathsf{hints})$ hold. Specifically: by symmetry it is sufficient to consider the additional conditions for which $j = g$ and $\ell < g$. There must be some $g' = \mathbf{r}(j)$ such that $(h_i, g' + e_i)$ does not overlap with $(h_k, \mathbf{r}(\ell) + e_k)$ for any $i, k \in [0, m)$ and $\ell \in [0, g-1]$.
 
 ### Security proofs
+
+
+Recall from the [relation definition](relation.md#copy-constraints) that fixed abstract cells with the same value are considered to be equivalent under $\equiv$. This allows a fixed column to be specified as a rotation of another fixed column, which can be useful to reduce the number of fixed concrete columns used by the concrete circuit.
+
+Since correctness does not depend on the specific hints provided by the circuit programmer, it is also valid to use any subset of the provided hints, or to infer hints that were not provided.
+
+
+* **Fixed-column consistency**: $i < m_f \Rightarrow h_i < m'_f$, i.e. the concrete circuit follows the same rule as the abstract circuit that fixed columns are on the left.
+* **Semantics preservation**:  The hints do not affect the meaning of a circuit, i.e., the set of public inputs for which it is satisfiable, and the knowledge required to find a witness.
+  <span style="color:red">Mary:  This is not concrete??? </span>
+
+
 
 #### $\mathsf{FIND\_ROW\_MAPPING}$ gives a correctness-preserving translation
 
