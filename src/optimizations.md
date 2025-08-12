@@ -183,7 +183,7 @@ We also claim that a correctness-preserving translation in this sense, when used
 These translations aim to improve circuit efficiency in the following ways:
 
 1) Reduce the number of concrete columns.  Each set of offset columns can be represented using a single concrete witness column.  The number of witness columns impacts the size of the resulting zero-knowledge proof.
-2) Reduce the overall circuit area:  When offset hints identify abstract cells as equivalent, the backend can optimize layout by reordering rows so that equivalent cells overlap in the concrete matrix, minimizing unused space.
+2) Reduce the overall circuit area:  When offset [hints](#hints) identify abstract cells as equivalent, the backend can optimize layout by reordering rows so that equivalent cells overlap in the concrete matrix, minimizing unused space.
 
 ## A model for a family of abstract-to-concrete translations and their correctness-preservation
 
@@ -225,17 +225,16 @@ is derived from design-time hints provided by the circuit author. To compute it,
 
 The function
 $$
-\mathsf{translate\_circuit} : \mathsf{AbstractCircuit} \mapsto \mathsf{ConcreteCircuit}
+\mathsf{translate\_circuit} : \mathsf{AbstractCircuit} \times \mathsf{Hints} \mapsto \mathsf{ConcreteCircuit}
 $$
 translates abstract Plonkish circuits to concrete Plonkish circuits.
 
-The function
+Given $C \mathrel{⦂} \mathsf{AbstractCircuit}$ and $\mathsf{hints} \mathrel{⦂} \mathsf{Hints}$,
 $$
-\mathsf{translate\_circuit} : \mathsf{AbstractCircuit} \mapsto \mathsf{ConcreteCircuit}
+\mathsf{translate\_circuit}(C, \mathsf{hints}) = C' = \left(d', \mathsf{offsets}, t', n', m', \equiv, S, m_{f}', f', \left[\, (p_u, \mathsf{CUS}_{u}) \,\right]_u, \left[\, (L_v, \mathsf{TAB}_v, \left[\, q_{v,s} \,\right]_s, \mathsf{LOOK}_v) \,\right]_v\right)
 $$
-translates abstract Plonkish circuits to concrete Plonkish circuits.  Given $C \in \mathsf{AbstractCircuit}$ and hints $\mathsf{hints}$ it behaves as follows:
-
-1) $(d', \mathsf{offsets}, m', n') := \mathsf{compute\_coord\_map}(C, \mathsf{hints} )$
+where:
+1) $(d', \mathsf{offsets}, m', n', \mathsf{coord\_map}) := \mathsf{compute\_coord\_map}(C, \mathsf{hints})$
 2) $t' := t$
 3) $\equiv$
 4) $S$
@@ -366,9 +365,9 @@ It relies on two subroutines, whose input/output behavior is specified here. The
 The algorithm computes:
 - The set $\mathsf{offsets}$ of unique offsets $e_i$ appearing in the hints.
 - The size $d'$ of the $\mathsf{offsets}$
-- The number of concrete rows $m'$ as one more than the maximum $h_i$ appearing in the hints.
-- A strictly increasing function $\mathbf{r} : [0, n) \to [0, n')$ that maps abstract to concrete column indices.
-- The number of concrete columns $n'$ as one more than the maximum $\mathbf{r}(j) + e_i$ across all constrained cells $(i, j)$.
+- The number of concrete columns $m'$ as one more than the maximum $h_i$ appearing in the hints.
+- A strictly increasing function $\mathbf{r} : [0, n) \to [0, n')$ that maps abstract to concrete row indices.
+- The number of concrete rows $n'$ as one more than the maximum $\mathbf{r}(j) + e_i$ across all constrained cells $(i, j)$.
 
 The mapping $\mathsf{coord\_map}$ is then defined by:
 $$
