@@ -39,7 +39,7 @@ The circuit $C \mathrel{⦂} \mathsf{ConcreteCircuit}_{\mathbb{F}}$ in turn has 
 | Circuit element   | Description | Used in |
 | ----------------- | ----------- | ------- |
 | ✨ $d$                | Number of offsets.  |  |
-| ✨ $\mathsf{offsets}$ | Set of offsets enabling optimisations on the circuit stucture| [Custom constraints](#custom-constraints), [Lookup constraints](#lookup-constraints)
+| ✨ $\mathsf{offsets}$ | Set of offsets $\subseteq \mathbb{Z}$ of size $d$ enabling optimisations on the circuit structure. | [Custom constraints](#custom-constraints), [Lookup constraints](#lookup-constraints)
 | $t$               | Length of the instance vector. |  |
 | $n > 0$           | Number of rows for the witness matrix. |  |
 | $m > 0$           | Number of columns for the witness matrix. |  |
@@ -48,11 +48,11 @@ The circuit $C \mathrel{⦂} \mathsf{ConcreteCircuit}_{\mathbb{F}}$ in turn has 
 | $m_f \leq m$      | Number of columns that are fixed. | [Fixed constraints](#fixed-constraints) |
 | $f$               | The fixed content of the first $m_f$ columns, $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$. | [Fixed constraints](#fixed-constraints) |
 | $p_u$             | ✨ Custom multivariate polynomials $p_u \mathrel{⦂} \mathbb{F}^{d  m} \rightarrow \mathbb{F}$. | [Custom constraints](#custom-constraints) |
-| $\mathsf{CUS}_u$  | Sets $\mathsf{CUS}_u \subseteq [0,n)$ indicating rows on which the custom polynomials $p_u$ are constrained to evaluate to 0. | [Custom constraints](#custom-constraints) |
+| $\mathsf{CUS}_u$  | Sets $\mathsf{CUS}_u \subseteq [0,n)$ indicating the source rows at which the custom polynomials $p_u$ are constrained to evaluate to 0. | [Custom constraints](#custom-constraints) |
 | $L_v$             | Number of table columns in the lookup table with index $v$, $\mathsf{TAB}_v$. | [Lookup constraints](#lookup-constraints) |
 | $\mathsf{TAB}_v$  | Lookup tables $\mathsf{TAB}_v \subseteq \mathbb{F}^{L_v}$, each with a number of tuples in $\mathbb{F}^{L_v}$. | [Lookup constraints](#lookup-constraints) |
 | $q_{v,s}$         | ✨ Scaling multivariate polynomials $q_{v,s} \mathrel{⦂} \mathbb{F}^{d  m} \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$. | [Lookup constraints](#lookup-constraints) |
-| $\mathsf{LOOK}_v$ | Sets $\mathsf{LOOK}_v \subseteq [0,n)$ indicating rows on which the scaling polynomials $q_{v,s}$ evaluate to some tuple in $\mathsf{TAB}_v$. | [Lookup constraints](#lookup-constraints) |
+| $\mathsf{LOOK}_v$ | Sets $\mathsf{LOOK}_v \subseteq [0,n)$ indicating the source rows at which the scaling polynomials $q_{v,s}$ evaluate to some tuple in $\mathsf{TAB}_v$. | [Lookup constraints](#lookup-constraints) |
 
 Multivariate polynomials are defined below in the [Custom constraints](#custom-constraints) section.
 
@@ -64,10 +64,10 @@ The relation $\mathcal{R}_{\mathsf{concrete}}$ takes witnesses of the following 
 | ----------------- | -------- |
 | $w$               | The witness matrix $w \mathrel{⦂} \mathbb{F}^{m \times n}$. |
 
-✨ Define $\vec{w}_{j} \in \mathbb{F}^{m d}$ as the row vector
-$\vec{w}_{j} := \big[\, w[i, j + \mathsf{offset}] : (i, \mathsf{offset}) \leftarrow (0 \text{..} m) \times \mathsf{offsets} \,\big]$.
+✨ Define $\vec{w}_{j} \in \mathbb{F}^{m \cdot d}$ as the row vector
+$\vec{w}_{j} := \big[\, w[i, j + \mathsf{offset}] : (i, \mathsf{offset}) \leftarrow [0, m) \times \mathsf{offsets} \,\big]$.
 
-Some coordinates of $\vec{w}_j$ may involve out-of-bounds accesses to $w$, since $j$ ranges up to $n$ and $\mathsf{offsets}$ may include nonzero values. We adopt the convention that such out-of-bounds entries are left *undefined* — that is, their values are not constrained by the relation and may be set arbitrarily.
+Some coordinates of $\vec{w}_j$ may involve out-of-bounds accesses to $w$, since $j$ ranges up to $n$ and $\mathsf{offsets}$ may include nonzero values. It is an error if a concrete circuit involves such accesses for *enabled* source rows of custom or lookup constraints — that is, if $j \in \mathsf{CUS}_u$ for any $u$ or $j \in \mathsf{LOOK}_v$ for any $v$.
 
 
 
@@ -83,8 +83,8 @@ $$
    w \mathrel{⦂} \mathbb{F}^{m \times n}, \ f \mathrel{⦂} \mathbb{F}^{m_f \times n} & & i \in [0,m_f), \ j \in [0,n) \Rightarrow w[i, j] = f[i, j] \\[0.3ex]
    S \subseteq ([0,m) \times [0,n)) \times [0,t), \ \phi \mathrel{⦂} \mathbb{F}^t & & ((i,j),k) \in S \Rightarrow w[i, j] = \phi[k] \\[0.3ex]
    \equiv\; \subseteq ([0,m) \times [0,n)) \times ([0,m) \times [0,n)) & & (i,j) \equiv (k,\ell) \Rightarrow w[i, j] = w[k, \ell] \\[0.3ex]
-   \mathsf{CUS}_u \subseteq [0,n), \ p_u \mathrel{⦂} \mathbb{F}^{d  m} \rightarrow \mathbb{F} & & j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0 \\[0.3ex]
-   \mathsf{LOOK}_v \subseteq [0,n), \ q_{v,s} \mathrel{⦂} \mathbb{F}^{d  m} \rightarrow \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
+   \mathsf{CUS}_u \subseteq [0,n), \ p_u \mathrel{⦂} \mathbb{F}^{m \cdot d} \rightarrow \mathbb{F} & & j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0 \\[0.3ex]
+   \mathsf{LOOK}_v \subseteq [0,n), \ q_{v,s} \mathrel{⦂} \mathbb{F}^{m \cdot d} \rightarrow \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
 \end{array}
 $$
 
@@ -115,7 +115,7 @@ Custom constraints enforce that witness entries within a row satisfy some multiv
 | -------- | -------- |
 | $j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0$ | $u$ is the index of a custom constraint. $j$ ranges over the set of rows $\mathsf{CUS}_u$ <br> for which the custom constraint is switched on. |
 
-Here $p_u \mathrel{⦂} \mathbb{F}^{d  m} \rightarrow \mathbb{F}$ is an arbitrary [multivariate polynomial](https://en.wikipedia.org/wiki/Polynomial_ring#Definition_(multivariate_case)):
+Here $p_u \mathrel{⦂} \mathbb{F}^{m \cdot d} \rightarrow \mathbb{F}$ is an arbitrary [multivariate polynomial](https://en.wikipedia.org/wiki/Polynomial_ring#Definition_(multivariate_case)):
 
 > Given $\eta$ symbols $X_0, \dots, X_{\eta-1}$ called indeterminates, a multivariate polynomial $P$ in these indeterminates, with coefficients in $\mathbb{F}$,
 > is a finite linear combination
@@ -123,10 +123,11 @@ Here $p_u \mathrel{⦂} \mathbb{F}^{d  m} \rightarrow \mathbb{F}$ is an arbitrar
 > $P(X_0, \dots, X_{\eta-1}) = \sum_{z=0}^{\nu-1} \Big(c_z\, {\small\prod_{b=0}^{\eta-1}}\, X_b^{\alpha_{z,b}}\Big)$
 >
 >  where $\nu \mathrel{⦂} \mathbb{N}$, $c_z \mathrel{⦂} \mathbb{F} \neq 0$, and $\alpha_{z,b} \mathrel{⦂} \mathbb{N}$.
+Note that in this usage $\eta = m \cdot d$.
 
 #### Lookup constraints
 
-Lookup constraints enforce that some polynomial function of the witness entries on a row are contained in some table.
+Lookup constraints enforce that the evaluation of some polynomial function on the witness entries $\vec{w}_j$ for the source row $j$ is contained in some table.
 In this specification, we only support fixed lookup tables determined in advance. This could be generalized to support dynamic tables determined by part of the witness matrix.
 
 | Lookup Constraints | Description |
@@ -294,7 +295,7 @@ It returns $(d', \mathsf{offsets}', m', m_f', n', \mathsf{coord\_map})$ such tha
 - $m' \in \mathbb{N}$ is the number of concrete columns,
 - $m_f' \leq m'$ is the number of concrete columns that are fixed,
 - $n' \in \mathbb{N}$ is the number of concrete rows,
-- the coordinate mapping function  
+- the coordinate mapping function
   $$
   \mathsf{coord\_map} : [0, m) \times [0, n) \to [0, m') \times [0, n')
   $$
