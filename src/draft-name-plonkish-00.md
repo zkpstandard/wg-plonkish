@@ -1,3 +1,4 @@
+
 ---
 stand_alone: true
 ipr: trust200902
@@ -11,7 +12,7 @@ author:
 
 informative:
   Thomas22:
-    title: "Arithmetization of Sigma relations in Halo 2"
+    title: "Arithmetization of Σ¹₁ relations in Halo 2"
     author:
       - ins: M. Thomas
         name: Morgan Thomas
@@ -30,7 +31,16 @@ informative:
     target: https://docs.zkproof.org/reference
     format:
       HTML: https://docs.zkproof.org/reference
-      
+
+  MultivariatePolynomial:
+    title: "Polynomial ring – Definition (multivariate case)"
+    author:
+      - org: Wikipedia editors
+    date: 2025
+    target: https://en.wikipedia.org/wiki/Polynomial_ring#Definition_(multivariate_case)
+    format:
+      HTML: https://en.wikipedia.org/wiki/Polynomial_ring#Definition_(multivariate_case)
+
 --- abstract
 
 An arithmetization is a language that a proof system uses to express statements. A circuit is a program in this language. The associated computation has been computed correctly if and only if all of the constraints in the circuit are satisfied.
@@ -59,7 +69,7 @@ The length of a sequence `S`, or the number of elements in a set `S`, is written
 
 When `f` is a function that takes a tuple as argument, we will allow `f((i, j))` to be written as `f[i, j]`.
 
-The terminology used here is intended to be consistent with {{ZKProofCommunityReference}}. We diverge from this terminology as follows:
+The terminology used here is intended to be consistent with the ZKProof Community Reference {{ZKProofCommunityReference}}. We diverge from this terminology as follows:
 * We refer to the public inputs to the circuit as an "instance vector". The entries of this vector are called "instance variables" in the Community Reference.
 
 # The General Plonkish Relation `R_plonkish`
