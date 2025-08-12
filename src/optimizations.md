@@ -29,8 +29,8 @@ $$
 \begin{array}{rcl}
 \exists (k, \ell) \neq (i, j) &:& (i, j) \equiv (k, \ell) \\
 \exists k &:& S[k] = (i, j) \\
-\exists u &:& j \in \mathsf{CUS}_u \text{ and } w[i, j] \text{ ``might be used'' in } p_u(\vec{w}_j) \\
-\exists v, s &:& j \in \mathsf{LOOK}_v \text{ and } w[i, j] \text{ ``might be used'' in } q_{v,s}(\vec{w}_j),
+\exists u &:& j \in \mathsf{CUS}_u \text{ and } p_u(\vec{w}_j) \text{ ``has support involving'' } w[i, j] \\
+\exists v, s &:& j \in \mathsf{LOOK}_v \text{ and } q_{v,s}(\vec{w}_j) \text{ ``has support involving'' } w[i, j],
 \end{array}
 $$
 
@@ -39,7 +39,7 @@ Here $p_u, \ q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ are each
 > Given $\eta$ symbols $X_0, \dots, X_{\eta-1}$ called indeterminates, a multivariate polynomial $P$ in these indeterminates, with coefficients in $\mathbb{F}$,
 > is a finite linear combination $$P(X_0, \dots, X_{\eta-1}) = \sum_{z=0}^{\nu-1} \Big(c_z\, {\small\prod_{b=0}^{\eta-1}}\, X_b^{\alpha_{z,b}}\Big)$$ where $\nu \mathrel{⦂} \mathbb{N}$, $c_z \mathrel{⦂} \mathbb{F} \neq 0$, and $\alpha_{z,b} \mathrel{⦂} \mathbb{N}$.
 
-Cell $w[i, j]$ "might be used" in $P(\vec{w}_j)$ iff $\exists z \in [0, \nu)$ s.t. $\alpha_{z,i} > 0$.
+$P(\vec{w}_j)$ "has support involving" its variable at index $i$, that is $w[i, j]$, iff $\exists z \in [0, \nu)$ s.t. $\alpha_{z,i} > 0$.
 
 ## Correctness-preserving translation of circuits
 

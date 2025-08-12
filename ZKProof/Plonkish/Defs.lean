@@ -147,9 +147,9 @@ public structure R_parts (φ : C.Instance) (w : C.Witness) where
 public def R : C.Relation := { (φ, w) | C.R_parts φ w }
 
 /--
-Polynomial `p` "might use" variable `i` iff any monomial in `p.support` involves `i`.
+Polynomial `p` "has support involving" variable `i` iff any monomial in `p.support` involves `i`.
 -/
-public def might_use (p : C.RowPoly) (i : C.Col) := ∃ (m : p.support), (m : C.Col →₀ ℕ) i > 0
+public def has_support_involving (p : C.RowPoly) (i : C.Col) := ∃ (m : p.support), (m : C.Col →₀ ℕ) i > 0
 
 /--
 We say that an abstract cell at location `e` is "constrained" if it appears
@@ -159,7 +159,7 @@ not need to be treated as a special case.
 public def constrained (e : C.Entry) :=
     (∃ (e' : C.Entry) (distinct : e ≠ e'), C.E e e')
   ∨ (∃ (k : C.Input), C.S[k] = e)
-  ∨ (∃ (u : Fin C.U), e.j ∈ C.CUS u ∧ C.might_use (C.p u) e.i)
-  ∨ (∃ (v : Fin C.V) (s : Fin (C.L v)), e.j ∈ C.LOOK v ∧ C.might_use (C.q v)[s] e.i)
+  ∨ (∃ (u : Fin C.U), e.j ∈ C.CUS u ∧ C.has_support_involving (C.p u) e.i)
+  ∨ (∃ (v : Fin C.V) (s : Fin (C.L v)), e.j ∈ C.LOOK v ∧ C.has_support_involving (C.q v)[s] e.i)
 
 end AbstractCircuit
