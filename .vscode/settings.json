@@ -1,0 +1,56 @@
+// This file is generated from `src/macros.txt` by `util/gen-settings.sh`.
+{
+    "markdown.extension.katex.macros": {
+        "\\sf": "\\textsf{#1}",
+        "\\COL": "\\hspace{0.9em}",
+        "\\bs": "\\COL\\hspace{-1.6em}",
+        "\\oftype": "\\bs\\raisebox{.25ex}{\\scriptsize ⦂}\\kern0.5em",
+        "\\range": "{#1}\\,\\text{..}\\,{#2}",
+        "\\vector": "\\left[\\;{#1}\\colon{#2}\\;\\right]",
+        "\\Vector": "\\left[\\;{#1}\\Colon{#2}\\;\\right]",
+        "\\setof": "\\{\\,{#1}\\,\\}",
+        "\\option": "({#1}) \\union \\setof{\\bot}",
+
+        "\\break": "\\\\\\hspace{1em}",
+        "\\typecolon": "\\mathrel{\\raisebox{.25ex}{\\scriptsize ⦂}}",
+        "\\stypecolon": "\\mathrel{\\raisebox{.2ex}{\\,\\tiny ⦂}\\,}",
+        "\\colon": "\\mathrel{:}",
+        "\\where": "\\mathrel{|}",
+        "\\intersection": "\\mathrel{\\cap}",
+        "\\union": "\\mathrel{\\cup}",
+        "\\to": "\\mathrel{\\rightarrow}",
+        "\\gets": "\\mathrel{\\leftarrow}",
+        "\\and": "\\mathrel{\\wedge}",
+        "\\or": "\\mathrel{\\vee}",
+        "\\implies": "\\mathrel{\\Rightarrow}",
+
+        "\\Set": "\\mathsf{Set}\\kern-0.1em\\left\\langle{#1}\\right\\rangle\\kern-0.1em",
+        "\\Equiv": "\\mathsf{Equiv}\\kern-0.15em\\left\\langle{#1}\\right\\rangle\\kern-0.1em",
+
+        "\\plonkish": "{\\mathsf{plonkish}}",
+        "\\concrete": "{\\mathsf{concrete}}",
+
+        "\\R": "\\mathcal{R}",
+        "\\L": "\\mathcal{L}",
+
+        "\\F": "\\mathbb{F}",
+        "\\N": "\\mathbb{N}",
+        "\\Z": "\\mathbb{Z}",
+
+        "\\CUS": "\\mathsf{CUS}",
+        "\\LOOK": "\\mathsf{LOOK}",
+        "\\TAB": "\\mathsf{TAB}",
+        "\\offset": "\\mathsf{offset}",
+        "\\offsets": "\\mathsf{offsets}",
+        "\\windowsize": "\\mathsf{windowsize}",
+        "\\hints": "\\mathsf{hints}",
+        "\\coordmap": "\\mathsf{coord\\_map}",
+        "\\okfor": "\\mathsf{ok\\_for}",
+        "\\constrained": "\\mathsf{constrained}",
+
+        "\\comma": "\\textsf{, }",
+        "\\stop": "\\kern-0.03em\\textsf{.}",
+        "\\bs": "\\!\\!\\!\\!"
+
+    }
+}

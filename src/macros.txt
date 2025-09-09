@@ -1,0 +1,61 @@
+\sf:\textsf{#1}
+\COL:
+\bs:\COL\hspace{-1.6em}
+\oftype:\bs\raisebox{.25ex}{\scriptsize ⦂}\kern0.5em
+\range:{#1}\,\text{..}\,{#2}
+\vecof:\left[\;{#1}\;\right]
+\setof:\{\,{#1}\,\}
+\option:({#1}) \union \setof{\bot}
+
+\break:\\\hspace{1em}
+\typecolon:\mathrel{\raisebox{.25ex}{\scriptsize ⦂}}
+\stypecolon:\mathrel{\raisebox{.2ex}{\,\tiny ⦂}\,}
+\suchthat:\mathrel{:}
+\where:\mathrel{|}
+\intersection:\mathrel{\cap}
+\union:\mathrel{\cup}
+\to:\mathrel{\rightarrow}
+\gets:\mathrel{\leftarrow}
+\and:\mathrel{\wedge}
+\or:\mathrel{\vee}
+\implies:\mathrel{\Rightarrow}
+\false:\mathsf{false}
+\true:\mathsf{true}
+
+\Set:\mathsf{Set}\kern-0.1em\left\langle{#1}\right\rangle\kern-0.1em
+\Equiv:\mathsf{Equiv}\kern-0.15em\left\langle{#1}\right\rangle\kern-0.1em
+
+\plonkish:{\mathsf{plonkish}}
+\concrete:{\mathsf{concrete}}
+
+\cR:\mathcal{R}
+\cL:\mathcal{L}
+\cT:\mathcal{T}
+\cI:\mathcal{I}
+\cF:\mathcal{F}
+
+\F:\mathbb{F}
+\N:\mathbb{N}
+\Z:\mathbb{Z}
+
+\AbstractCircuit:\mathsf{AbstractCircuit}
+\ConcreteCircuit:\mathsf{ConcreteCircuit}
+\Hints:\mathsf{Hints}
+\CUS:\mathsf{CUS}
+\LOOK:\mathsf{LOOK}
+\TAB:\mathsf{TAB}
+\offset:\mathsf{offset}
+\offsets:\mathsf{offsets}
+\hints:\mathsf{hints}
+\coordmap:\mathsf{coord\_map}
+\okfor:\mathsf{ok\_for}
+\constrained:\mathsf{constrained}
+\computecoordmap:\mathsf{compute\_coord\_map}
+\translateinstance:\mathsf{translate\_instance}
+\translatewitness:\mathsf{translate\_witness}
+\translatecircuit:\mathsf{translate\_circuit}
+\workingcoordmap:\mathsf{working\_coord\_map}
+
+\comma:\textsf{, }
+\stop:\kern-0.03em\textsf{.}
+\bs:\!\!\!\!

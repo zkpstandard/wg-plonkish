@@ -34,6 +34,20 @@ mdbook build
 
 The rendered documents can be viewed at [`docs/index.html`](docs/index.html).
 
+## Previewing
+
+The Markdown files can also be previewed using the [Markdown All in One extension](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one).
+This is often faster and more convenient to use because it updates automatically on non-macro changes.
+
+This extension does not automatically read the [`src/macros.txt`](src/macros.txt) file
+used by mdbook for macro definitions; it instead uses [`.vscode/settings.json`](.vscode/settings.json),
+which is in a different format. To regenerate this file from `src/macros.txt`,
+run
+
+```shell
+util/gen-settings.sh
+```
+
 ## Lean 4 prerequisites
 
 To use the Lean formalization, we recommend VS Code. Instructions on setting
