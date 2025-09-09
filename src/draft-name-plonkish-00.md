@@ -78,7 +78,7 @@ The general relation `R_plonkish` contains pairs of `(x, w)` where:
 * the instance `x` consists of the parameters of the proof system, the circuit `C`, and the public inputs to the circuit (i.e. the instance vector).
 * the witness `w` consists of the matrix of values provided by the prover. In this model it consists of the (potentially private) prover inputs to the circuit, and any intermediate values (including fixed values) that are not inputs to the circuit but are required in order to satisfy it.
 
-We say that a `x` is a *valid* instance whenever there exists some witness `w` such that `(x, w) in R_plonkish` holds.
+We say that a `x` is a *valid* instance whenever there exists some witness `w` such that `(x, w) ∈ R_plonkish` holds.
 The Plonkish language `L_plonkish` contains all valid instances.
 
 A circuit-specific relation is a specialization of `R_plonkish` to a particular circuit.
@@ -149,7 +149,7 @@ In this model, a circuit-specific relation `R_{Fp, C}` for a field `Fp` and circ
 
 ## Conditions satisfied by statements in `R_plonkish`
 
-There are four types of constraints that a Plonkish statement `(x, w) in R_plonkish` must satisfy:
+There are four types of constraints that a Plonkish statement `(x, w) ∈ R_plonkish` must satisfy:
 
 * Fixed constraints
 * Copy constraints
@@ -169,7 +169,7 @@ Copy constraints enforce that entries in the witness matrix are equal to each ot
 | `k in [0, t) => w[S[k]] = phi[k]`.   | The `(i,j)` advice entry is equal to the `k` instance entry for `S[k] = (i,j)`.                           |
 | `(i,j) ≡ (k,l) => w[i, j] = w[k, l]` | `≡` is an equivalence relation indicating which witness entries are constrained to be equal.              |
 
-By convention, when fixed abstract cells have the same value, we consider them to be equivalent under `≡`. That is, if `i < m_f && k < m_f && f[i, j] = f[k, l]` then `(i, j) ≡ (k, l)`.
+By convention, when fixed abstract cells have the same value, we consider them to be equivalent under `≡`. That is, if `i < m_f` and `k < m_f` and `f[i, j] = f[k, l]` then `(i, j) ≡ (k, l)`.
 
 This has no direct effect on the relation, but it will simplify expressing an optimization.
 

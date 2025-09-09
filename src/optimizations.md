@@ -69,8 +69,6 @@ $\vec{w}_{j} := \big[\, w[i, j + \mathsf{offset}] : (i, \mathsf{offset}) \leftar
 
 Some coordinates of $\vec{w}_j$ may involve out-of-bounds accesses to $w$, since $j$ ranges up to $n$ and $\mathsf{offsets}$ may include nonzero values. It is an error if a concrete circuit involves such accesses for *enabled* source rows of custom or lookup constraints — that is, if $j \in \mathsf{CUS}_u$ for any $u$ or $j \in \mathsf{LOOK}_v$ for any $v$.
 
-
-
 ### Definition of the relation
 
 Given the above definitions, the relation $\mathcal{R}_{\mathsf{concrete}}$ corresponds to a set of $\,(\!$ instance $\!,\,$ witness $\!)\,$ pairs
@@ -99,7 +97,7 @@ There are four types of constraints that a Plonkish statement $(x, w) \in \mathc
 * Custom constraints
 * Lookup constraints
 
-An Interactive Oracle Proof for an optimized Plonkish constraint system must demonstrate that all of these constraints are satisfied by $\,(\!$ instance $\!,\,$ witness $\!) \in \mathcal{R}_{\mathsf{concrete}}\,$
+An Interactive Oracle Proof for an optimized Plonkish constraint system must demonstrate that all of these constraints are satisfied by $\,(\!$ instance $\!,\,$ witness $\!) \in \mathcal{R}_{\mathsf{concrete}}$.
 
 #### Fixed constraints
 

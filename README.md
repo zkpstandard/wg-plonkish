@@ -21,14 +21,18 @@ development and have not been fully reviewed.
 
 ## Rust prerequisites
 
-- `cargo install mdbook`
-- `cargo install mdbook-katex`
+```shell
+cargo install mdbook
+cargo install mdbook-katex
+```
 
 ## Rendering
 
-- `mdbook build`
+```shell
+mdbook build
+```
 
-The rendered documents can be viewed at [docs/index.html](docs/index.html).
+The rendered documents can be viewed at [`docs/index.html`](docs/index.html).
 
 ## Lean 4 prerequisites
 

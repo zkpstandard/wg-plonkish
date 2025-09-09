@@ -18,6 +18,8 @@ macros = "src/macros.txt"
 renderer = ["html"]
 # Uncomment this if we need \href and \url links in KaTeX to work (which we currently don't).
 #trust = true
+# Left-aligned displaymath
+fleqn = true
 
 [output.html]
 default-theme = "light"
