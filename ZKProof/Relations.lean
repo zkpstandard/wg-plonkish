@@ -95,7 +95,7 @@ statement holds.
 Previous work:
 
 * [Algebraic Reductions of Knowledge](https://eprint.iacr.org/2022/009) -- this
-  paper describes a notion that generalises refinements by allowing them to be
+  paper describes a notion that generalizes refinements by allowing them to be
   interactive protocols.
 -/
 

@@ -8,17 +8,143 @@ The benefit of the simpler abstract model is that it allows reasoning about the 
 
 In this document we specify a method to translate from an abstract circuit to a concrete one, that retains the zero-knowledge, (knowledge) soundness, and completeness of the abstract system. This can include automated optimizations, which are able to reorder the rows as needed without changing the meaning of the circuit.
 
-The optimizations suggested in this specification would be impractical or error-prone to do manually, because they rely on global optimization of the witness matrix layout. [TODO: make this more convincing or give examples.]
+The optimizations suggested in this specification would be impractical or error-prone to perform manually, as they require global reasoning about the witness layout. Without automation, ensuring correctness while reordering rows or applying offsets becomes fragile and difficult to scale, especially in the presence of copy constraints or lookups where subtle errors can silently break circuit soundness.
 
-## Preliminary definitions
+In this document, we:
+
+* **Define the concrete Plonkish relation**, intended for readers building a proving system or interactive oracle proof targeting the concrete Plonkish relation.
+
+* **Describe a correctness-preserving circuit translation**, for those verifying the optimizations introduced in this document.
+
+* **Specify the translation from an abstract to a concrete Plonkish relation**, aimed at implementers of the concrete relation.
+
+* **Prove that the translation preserves correctness**, again intended for readers verifying the soundness of the optimizations.
+
+## The Concrete Plonkish Relation
+
+The relation $\mathcal{R}_{\mathsf{concrete}}$ is an optimization of $\mathcal{R}_{\mathsf{plonkish}}$.  We have highlighted differences using the icon ✨.
+
+### Instances
+
+$\mathcal{R}_{\mathsf{concrete}}$ takes instances of the following form:
+
+| Instance element  | Description |
+| ----------------- | ----------- |
+| $\mathbb{F}$      | A prime field. |
+| $C$               | The circuit. |
+| $\phi$            | The instance vector $\phi \mathrel{⦂} \mathbb{F}^{C.t}$ (where $t$ is the instance vector length defined below). |
+
+The circuit $C \mathrel{⦂} \mathsf{ConcreteCircuit}_{\mathbb{F}}$ in turn has the following form:
+
+| Circuit element   | Description | Used in |
+| ----------------- | ----------- | ------- |
+| ✨ $d$                | Number of offsets.  |  |
+| ✨ $\mathsf{offsets}$ | Set of offsets $\subseteq \mathbb{Z}$ of size $d$ enabling optimizations on the circuit structure. | [Custom constraints](#custom-constraints), [Lookup constraints](#lookup-constraints)
+| $t$               | Length of the instance vector. |  |
+| $n > 0$           | Number of rows for the witness matrix. |  |
+| $m > 0$           | Number of columns for the witness matrix. |  |
+| $\equiv$          | An equivalence relation on $[0,m) \times [0,n)$ indicating which witness entries are equal to each other. | [Copy constraints](#copy-constraints) |
+| $S$               | A set $S \subseteq ([0,m) \times [0,n)) \times [0,t)$ indicating which witness entries are equal to instance vector entries. | [Copy constraints](#copy-constraints) |
+| $m_f \leq m$      | Number of columns that are fixed. | [Fixed constraints](#fixed-constraints) |
+| $f$               | The fixed content of the first $m_f$ columns, $f \mathrel{⦂} \mathbb{F}^{m_f \times n}$. | [Fixed constraints](#fixed-constraints) |
+| $p_u$             | ✨ Custom multivariate polynomials $p_u \mathrel{⦂} \mathbb{F}^{d  m} \rightarrow \mathbb{F}$. | [Custom constraints](#custom-constraints) |
+| $\mathsf{CUS}_u$  | Sets $\mathsf{CUS}_u \subseteq [0,n)$ indicating the source rows at which the custom polynomials $p_u$ are constrained to evaluate to 0. | [Custom constraints](#custom-constraints) |
+| $L_v$             | Number of table columns in the lookup table with index $v$, $\mathsf{TAB}_v$. | [Lookup constraints](#lookup-constraints) |
+| $\mathsf{TAB}_v$  | Lookup tables $\mathsf{TAB}_v \subseteq \mathbb{F}^{L_v}$, each with a number of tuples in $\mathbb{F}^{L_v}$. | [Lookup constraints](#lookup-constraints) |
+| $q_{v,s}$         | ✨ Scaling multivariate polynomials $q_{v,s} \mathrel{⦂} \mathbb{F}^{d  m} \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$. | [Lookup constraints](#lookup-constraints) |
+| $\mathsf{LOOK}_v$ | Sets $\mathsf{LOOK}_v \subseteq [0,n)$ indicating the source rows at which the scaling polynomials $q_{v,s}$ evaluate to some tuple in $\mathsf{TAB}_v$. | [Lookup constraints](#lookup-constraints) |
+
+Multivariate polynomials are defined below in the [Custom constraints](#custom-constraints) section.
+
+### Witnesses
+
+The relation $\mathcal{R}_{\mathsf{concrete}}$ takes witnesses of the following form:
+
+| Witness element   | Description |
+| ----------------- | -------- |
+| $w$               | The witness matrix $w \mathrel{⦂} \mathbb{F}^{m \times n}$. |
+
+✨ Define $\vec{w}_{j} \in \mathbb{F}^{m \cdot d}$ as the row vector
+$\vec{w}_{j} := \big[\, w[i, j + \mathsf{offset}] : (i, \mathsf{offset}) \leftarrow [0, m) \times \mathsf{offsets} \,\big]$.
+
+Some coordinates of $\vec{w}_j$ may involve out-of-bounds accesses to $w$, since $j$ ranges up to $n$ and $\mathsf{offsets}$ may include nonzero values. It is an error if a concrete circuit involves such accesses for *enabled* source rows of custom or lookup constraints — that is, if $j \in \mathsf{CUS}_u$ for any $u$ or $j \in \mathsf{LOOK}_v$ for any $v$.
+
+
+
+### Definition of the relation
+
+Given the above definitions, the relation $\mathcal{R}_{\mathsf{concrete}}$ corresponds to a set of $\,(\!$ instance $\!,\,$ witness $\!)\,$ pairs
+$$
+ \left(x = \left(\mathbb{F}, C = \left(d, \mathsf{offsets}, t, n, m, \equiv, S, m_f, f, \left[\, (p_u, \mathsf{CUS}_{u}) \,\right]_u, \left[\, (L_v, \mathsf{TAB}_v, \left[\, q_{v,s} \,\right]_s, \mathsf{LOOK}_v) \,\right]_v\right), \phi\right),\, w \right)
+$$
+such that:
+$$
+\begin{array}{ll|l}
+   w \mathrel{⦂} \mathbb{F}^{m \times n}, \ f \mathrel{⦂} \mathbb{F}^{m_f \times n} & & i \in [0,m_f), \ j \in [0,n) \Rightarrow w[i, j] = f[i, j] \\[0.3ex]
+   S \subseteq ([0,m) \times [0,n)) \times [0,t), \ \phi \mathrel{⦂} \mathbb{F}^t & & ((i,j),k) \in S \Rightarrow w[i, j] = \phi[k] \\[0.3ex]
+   \equiv\; \subseteq ([0,m) \times [0,n)) \times ([0,m) \times [0,n)) & & (i,j) \equiv (k,\ell) \Rightarrow w[i, j] = w[k, \ell] \\[0.3ex]
+   \mathsf{CUS}_u \subseteq [0,n), \ p_u \mathrel{⦂} \mathbb{F}^{m \cdot d} \rightarrow \mathbb{F} & & j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0 \\[0.3ex]
+   \mathsf{LOOK}_v \subseteq [0,n), \ q_{v,s} \mathrel{⦂} \mathbb{F}^{m \cdot d} \rightarrow \mathbb{F}, \ \mathsf{TAB}_v \subseteq \mathbb{F}^{L_v} & & j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
+\end{array}
+$$
+
+In this model, a circuit-specific relation $\mathcal{R}_{\mathbb{F}, C}$ for a field $\mathbb{F}$ and circuit $C$ is the relation $\mathcal{R}_{\mathsf{plonkish}}$ restricted to $\{ ((\mathbb{F}, C, \phi \mathrel{⦂} \mathbb{F}^{C.t}), w \mathrel{⦂} \mathbb{F}^{C.m \times C.n}) \}$.
+
+### Conditions satisfied by statements in $\mathcal{R}_{\mathsf{plonkish}}$
+
+There are four types of constraints that a Plonkish statement $(x, w) \in \mathcal{R}_{\mathsf{concrete}}$ must satisfy:
+
+* Fixed constraints
+* Copy constraints
+* Custom constraints
+* Lookup constraints
+
+An Interactive Oracle Proof for an optimized Plonkish constraint system must demonstrate that all of these constraints are satisfied by $\,(\!$ instance $\!,\,$ witness $\!) \in \mathcal{R}_{\mathsf{concrete}}\,$
+
+#### Fixed constraints
+
+The first $m_f$ columns of $w$ are fixed to the columns of $f$.
+
+#### Custom constraints
+
+In the concrete model we define here, a custom constraint applies to a set of offset rows relative to each row selected for that constraint.
+
+Custom constraints enforce that witness entries within a row satisfy some multivariate polynomial. Here $p_u$ could indicate any case that can be generated using a combination of multiplications and additions.
+
+| Custom Constraints | Description |
+| -------- | -------- |
+| $j \in \mathsf{CUS}_u \Rightarrow p_u(\vec{w}_j) = 0$ | $u$ is the index of a custom constraint. $j$ ranges over the set of rows $\mathsf{CUS}_u$ <br> for which the custom constraint is switched on. |
+
+Here $p_u \mathrel{⦂} \mathbb{F}^{m \cdot d} \rightarrow \mathbb{F}$ is an arbitrary [multivariate polynomial](https://en.wikipedia.org/wiki/Polynomial_ring#Definition_(multivariate_case)):
+
+> Given $\eta$ symbols $X_0, \dots, X_{\eta-1}$ called indeterminates, a multivariate polynomial $P$ in these indeterminates, with coefficients in $\mathbb{F}$,
+> is a finite linear combination
+>
+> $P(X_0, \dots, X_{\eta-1}) = \sum_{z=0}^{\nu-1} \Big(c_z\, {\small\prod_{b=0}^{\eta-1}}\, X_b^{\alpha_{z,b}}\Big)$
+>
+>  where $\nu \mathrel{⦂} \mathbb{N}$, $c_z \mathrel{⦂} \mathbb{F} \neq 0$, and $\alpha_{z,b} \mathrel{⦂} \mathbb{N}$.
+Note that in this usage $\eta = m \cdot d$.
+
+#### Lookup constraints
+
+Lookup constraints enforce that the evaluation of some polynomial function on the witness entries $\vec{w}_j$ for the source row $j$ is contained in some table.
+In this specification, we only support fixed lookup tables determined in advance. This could be generalized to support dynamic tables determined by part of the witness matrix.
+
+| Lookup Constraints | Description |
+| -------- | -------- |
+| $j \in \mathsf{LOOK}_v \Rightarrow \big[\, q_{v,s}(\vec{w}_j) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v$ | $v$ is the index of a lookup table. $j$ ranges over the set of rows $\mathsf{LOOK}_v$ <br> for which the lookup constraint is switched on. |
+
+Here $q_{v,s} \mathrel{⦂} \mathbb{F}^{d  m} \rightarrow \mathbb{F}$ for $s \leftarrow 0 \text{..} L_v$ are multivariate polynomials that collectively map the witness entries $\vec{w}_j$ on the lookup row $j \in \mathsf{LOOK}_v$ to a tuple of field elements. This tuple will be constrained to match some row of the table $\mathsf{TAB}_v$.
+
+## Notation
 
 If not otherwise defined, variable names used here are consistent with [the relation description](relation.md).
 
 We will use the convention that variables marked with a prime ($'$) refer to *concrete* column or row indices.
 
-For brevity when referring to variables dependent on an abstract circuit such as $C.t$, we will elide the $C.$ and just refer to $t$ when $C$ is obvious from context.
+For brevity when referring to variables dependent on an abstract circuit such as $C.t$, we will omit the $C.$ and just refer to $t$ when $C$ is obvious from context.
 
-Similarly, when referring to variables dependent on a concrete circuit such as $C'.t'$, we will elide the $C'.$ and just refer to $t'$ when $C'$ is obvious from context.
+Similarly, when referring to variables dependent on a concrete circuit such as $C'.t'$, we will omit the $C'.$ and just refer to $t'$ when $C'$ is obvious from context.
 
 An "abstract cell" specifies an entry in the witness matrix $w$ of the abstract circuit. A "concrete cell" specifies an entry in the witness matrix $w'$ of the concrete circuit.
 
@@ -34,14 +160,13 @@ $$
 \end{array}
 $$
 
-Here $p_u, \ q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ are each [multivariate polynomials](https://en.wikipedia.org/wiki/Polynomial_ring#Definition_(multivariate_case)) as defined in the relation description:
-
-> Given $\eta$ symbols $X_0, \dots, X_{\eta-1}$ called indeterminates, a multivariate polynomial $P$ in these indeterminates, with coefficients in $\mathbb{F}$,
-> is a finite linear combination $$P(X_0, \dots, X_{\eta-1}) = \sum_{z=0}^{\nu-1} \Big(c_z\, {\small\prod_{b=0}^{\eta-1}}\, X_b^{\alpha_{z,b}}\Big)$$ where $\nu \mathrel{⦂} \mathbb{N}$, $c_z \mathrel{⦂} \mathbb{F} \neq 0$, and $\alpha_{z,b} \mathrel{⦂} \mathbb{N}$.
+Here $p_u, \ q_{v,s} \mathrel{⦂} \mathbb{F}^m \rightarrow \mathbb{F}$ are each multivariate polynomials as defined above in the [Custom constraints](#custom-constraints) section.
 
 $P(\vec{w}_j)$ "has support involving" its variable at index $i$, that is $w[i, j]$, iff $\exists z \in [0, \nu)$ s.t. $\alpha_{z,i} > 0$.
 
 ## Correctness-preserving translation of circuits
+
+We define a correctness-preserving translation of circuits—this serves as the security notion that our optimizations must satisfy to ensure they do not introduce vulnerabilities.
 
 For simplicity fix a field $\mathbb{F}$. What we mean by a correctness-preserving translation $\mathcal{T} \mathrel{⦂} \mathsf{AbstractCircuit}_{\mathbb{F}} \rightarrow \mathsf{ConcreteCircuit}_{\mathbb{F}}$ is that $\mathcal{T}$ is an efficiently computable function from abstract circuits to concrete circuits, such that for any abstract circuit $C$ with $C' = \mathcal{T}(C)$:
   * There is a bijective map $\mathcal{I}_C \mathrel{⦂} \mathbb{F}^{t} \rightarrow \mathbb{F}^{t'}$, efficiently computable in both directions, between abstract instances and concrete instances.
@@ -53,71 +178,318 @@ We also claim that a correctness-preserving translation in this sense, when used
 
 > Aside: we could have required there to be an efficient reverse witness translation function $\mathcal{F}'_C \mathrel{⦂} \mathbb{F}_C^{m' \times n'} \rightarrow \mathbb{F}_C^{m \times n}$ from concrete witnesses to abstract witnesses, and then used $w = \mathcal{F}'_C(w')$ in the definition of knowledge soundness preservation. We do not take that approach because strictly speaking it would be an overspecification: we do not need the satisfying abstract witness to be *deterministically* and efficiently computable from the concrete witness; we only need it to be efficiently computable. Also, in general $w$ could also depend on the instance $x'$, not just $w'$. In practice, specifying such a function $\mathcal{F}'_C$ is likely to be the easiest way to prove knowledge soundness preservation.
 
-## A model for a class of abstract-to-concrete translations and their correctness
+## Efficiency improvements achieved by the abstract-to-concrete translations
 
-We give a specific model for a family of translations, and a criterion for them to be correctness-preserving consistent with the above definition. Note that this is very far from covering all possible correctness-preserving translations.
+These translations aim to improve circuit efficiency in the following ways:
 
-In our model, the abstract witness matrix $w$ consists of $m$ abstract columns, and the concrete witness matrix $w'$ consists of $m'$ concrete columns, of which the first $m'_f$ are fixed. A translation from an abstract to a concrete circuit will take inputs of the following form:
+1) Reduce the number of concrete columns.  Each set of offset columns can be represented using a single concrete witness column.  The number of witness columns impacts the size of the resulting zero-knowledge proof.
+2) Reduce the overall circuit area:  When offset [hints](#hints) identify abstract cells as equivalent, the backend can optimize layout by reordering rows so that equivalent cells overlap in the concrete matrix, minimizing unused space.
 
-| Translation input  | Description |
-| ------------------ | -------- |
-| input circuit      | This is the instance excluding the instance vector $\phi$. |
-| offset hints       | $\big[\, (h_i, e_i) \mathrel{⦂} [0,m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$ provided by the circuit designer. |
+## A model for a family of abstract-to-concrete translations and their correctness-preservation
 
-| Translation output | Description |
-| ------------------ | -------- |
-| output circuit     | This is like the input circuit but also supports applying the polynomials to cells on offset rows. |
+```
++--------------------+  +-------------------+  +-------------------+
+| translate_instance |  | translate_witness |  | translate_circuit |
++--------------------+  +-------------------+  +-------------------+
+          ^                        ^                     ^
+          |                        |                     |
+          +------------------------+---------------------+
+                                   |
+                             +-----------+
+                             | coord_map |
+                             +-----------+
+                                   ^
+                                   |
+                        +-----------------------+
+                        |   compute_coord_map   |
+                        | (uses designer hints) |
+                        +-----------------------+
+```
 
-### Adapting $\mathcal{R}_{\mathsf{plonkish}}$ to concrete circuits
+We propose a specific model for translating abstract circuits to concrete circuits, along with a correctness criterion that ensures such translations preserve the intended semantics. This model is not intended to capture all correctness-preserving translations, but rather to define one principled approach within that broader space.
 
-To define a relation for concrete circuits, it is necessary to directly handle row offsets.
+To translate from abstract Plonkish to concrete Plonkish circuits, we introduce the following high-level functions:
+* $\mathsf{translate\_circuit}$
+* $\mathsf{translate\_instance}$
+* $\mathsf{translate\_witness}$
 
-Let $\mathsf{offsets}$ be the sequence of row offsets that are available to be used in concrete gates and concrete lookups.
+Each of the functions $\mathsf{translate\_instance}$, $\mathsf{translate\_witness}$, and $\mathsf{translate\_circuit}$ depends on a coordinate mapping function, $\mathsf{coord\_map}$.
 
-Informally, we define $\mathcal{R}_{\mathsf{concrete}}$ to be $\mathcal{R}_{\mathsf{plonkish}}$ with the following changes:
+The function
+$$
+\mathsf{coord\_map} : [0, m) \times [0, n) \to [0, m') \times [0, n')
+$$
+is derived from design-time hints provided by the circuit author. To compute it, we define the function $\mathsf{compute\_coord\_map}$.  Here $m'$ and $n'$ are the number of concrete rows and columns respectively, with $m' \leq m$ and $n' \geq n$.
 
-* $\vec{w}'_{j'}$ is defined as the row vector $\big[\, w'[i', j' + \mathsf{offset}] : (i', \mathsf{offset}) \leftarrow (0 \text{..} n') \times \mathsf{offsets} \,\big]$.
-* $p'_u$ and $q'_{v,s}$ are each of type $\mathbb{F}^{\,\mathsf{windowsize}} \rightarrow \mathbb{F}$ where $\mathsf{windowsize} = m' \,\cdot\; \#\mathsf{offsets}$, instead of $\mathbb{F}^m \rightarrow \mathbb{F}$. They are applied to $\vec{w}'_{j'}$ as just defined instead of $\vec{w}_j$.
+### Function $\mathsf{translate\_circuit}$ to translate the relation
 
-We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).
+The function
+$$
+\mathsf{translate\_circuit} : \mathsf{AbstractCircuit} \times \mathsf{Hints} \mapsto \mathsf{ConcreteCircuit}
+$$
+translates abstract Plonkish circuits to concrete Plonkish circuits.
 
-### Hints
+Given $C \mathrel{⦂} \mathsf{AbstractCircuit}$ and $\mathsf{hints} \mathrel{⦂} \mathsf{Hints}$,
+$$
+\mathsf{translate\_circuit}(C, \mathsf{hints}) = C' = \left(d', \mathsf{offsets}, t', n', m', \equiv, S, m_{f}', f', \left[\, (p_u, \mathsf{CUS}_{u}) \,\right]_u, \left[\, (L_v, \mathsf{TAB}_v, \left[\, q_{v,s} \,\right]_s, \mathsf{LOOK}_v) \,\right]_v\right)
+$$
+where:
+1) $(d', \mathsf{offsets}, m', n', \mathsf{coord\_map}) := \mathsf{compute\_coord\_map}(C, \mathsf{hints})$
+2) $t' := t$
+3) $\equiv$
+4) $S$
+5) $m_f'$
+6) $f'$
+7) $p_u'$ $
+j' \in \mathsf{CUS}'_u \Rightarrow p_u\!\left(\big[\, w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m \,\big]\right) = 0
+$
+8) $\mathsf{CUS}_u' :=  \big\{\, \mathbf{r}(j) : j \in \mathsf{CUS}_u \,\big\}$
+9)  $L_v'$
+10) $\mathsf{TAB}_v'$
+11) $q_{v,s}'$
+12) $\mathsf{LOOK}_v'$
 
-Offsets are represented by hints $\big[\, (h_i, e_i) \,\big]$. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
 
-For simplicity we require that $i < m_f \Rightarrow h_i < m'_f$, i.e. the concrete circuit follows the same rule as the abstract circuit that fixed columns are on the left.
+## Computing the coordinate mapping $\mathsf{coord\_map}$
 
-Tesselation between custom constraints is just represented by equivalence under $\equiv$. When the offset hints indicate that two concrete cells in the same column are equivalent, the backend can optimize overall circuit area by reordering the rows so that the equivalent cells overlap.
+```
+                             +-----------+
+                             | coord_map |
+                             +-----------+
+                                   ^
+                                   |
+                       +-----------------------+
+                       |   compute_coord_map   |
+                       | (uses designer hints) |
+                       +-----------------------+
+                                 ^   ^
+                                 |   |
+                        +--------+   +-------+
+                        |                    |
+                   +---------+               |
+                   | ok_for  |               |
+                   +---------+               |
+                      ^   ^                  |
+                      |   |                  |
+              +-------+   +-------------+    |
+              |                         |    |
+    +-------------------+         +----------------+
+    | working_coord_map |         |  constrained   |
+    +-------------------+         +----------------+
+```
 
-More specifically, to translate the abstract circuit to a concrete circuit using the hints $\big[\, (h_i, e_i) \,\big]_i$, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, $\mathbf{r} \mathrel{⦂} [0, n) \rightarrow [0, n')$ with $n' \geq n$, such that the abstract cell with coordinates $(i, j)$ maps to the concrete cell with coordinates $(h_i, \mathbf{r}(j) + e_i)$, where:
+
+The function
+$$
+\mathsf{compute\_coord\_map}
+$$
+takes as input an abstract circuit and a set of designer-provided hints $(C, \mathsf{hints}) \in \mathsf{AbstractCircuit} \times \mathsf{Hints}$.  The domain of abstract circuits, $\mathsf{AbstractCircuit}$, is defined formally in the description of the relation $\mathcal{R}_{\mathsf{plonkish}}$.  The domain of offset hints, $\mathsf{Hints}$, is defined in the following section.
+
+It returns $(d', \mathsf{offsets}', m', m_f', n', \mathsf{coord\_map})$ such that :
+- $d' \in \mathbb{N}$ is the number of offsets
+- $\mathsf{offsets}' \in \mathbb{Z}^{d}$ are the offsets
+- $m' \in \mathbb{N}$ is the number of concrete columns,
+- $m_f' \leq m'$ is the number of concrete columns that are fixed,
+- $n' \in \mathbb{N}$ is the number of concrete rows,
+- the coordinate mapping function
+  $$
+  \mathsf{coord\_map} : [0, m) \times [0, n) \to [0, m') \times [0, n')
+  $$
+  assigns concrete coordinates to each abstract cell position.
+
+To translate the abstract circuit to a concrete circuit using the hints, we construct an injective mapping of abstract row numbers to concrete row numbers before applying offsets, such that:
 * all *constrained* abstract cells map to concrete cell coordinates that are in range;
 * every *constrained* abstract cell is represented by a distinct concrete cell, except that abstract cells that are equivalent under $\equiv$ *may* be identified.
 
-For given hints $\mathsf{hints} = \big[\, (h_i, e_i) \mathrel{⦂} [0, m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$, define the coordinate mapping $\mathsf{coord\_map} \mathrel{⦂} [0, m) \times [0, n) \rightarrow [0, m') \times \mathbb{Z}$ as
+### Hints
+
+The domain $\mathsf{Hints}$ represents collections of designer-provided **offset hints**. To simplify the programming model, the hints are not supposed to affect the meaning of a circuit (i.e. the set of public inputs for which it is satisfiable, and the knowledge required to find a witness).
+
+Each hint assigns to a column index $i \in [0, m)$:
+
+- a target column hint $h_i \in [0, m)$, and
+- a row offset expression $e_i \in \mathbb{Z}$,
+
+where for each column $i$ mapped to $h_i$, either $i$ and $h_i$ are both fixed abstract column indices $\in [0, m_f)$ or they are both non-fixed abstract column indices $\in [m_f, m)$.
+
+We define:
 $$
-\mathsf{coord\_map}[i, j] = (h_i, \mathbf{r}(j) + e_i) \tag{1}
+\mathsf{Hints} = \left\{ i \mapsto (h_i : [0, m), e_i : \mathbb{Z}) \;|\; (i < m_f \text{ and } h_i < m_f) \text{ or } (i \geq m_f \text{ and } h_i \geq m_f) \right\}
+$$
+that is, the set of length-$m$ sequences
+$$
+\mathsf{hints} : [0, m) \to [0, m) \times \mathbb{Z}
+$$
+where each entry $\mathsf{hints}[i]$ specifies a row hint and an offset for index $i$.
+
+Thus, $\mathsf{hints}[i] = (h_i, e_i)$ specifies:
+- $h_i \in [0, m)$: a column hint, representing a target column index
+- $e_i \in \mathbb{Z}$: a row offset expression (e.g., a symbolic shift)
+
+These hints guide the construction of the final coordinate map by specifying where (in columns) abstract elements prefer to appear and how to offset their placement in rows.
+
+### Function $\mathsf{compute\_coord\_map}$ to compute the coordinate mapping
+
+The function $\mathsf{compute\_coord\_map}$ computes the coordinate mapping $\mathsf{coord\_map}$ used as a subroutine in $\mathsf{translate\_instance}$, $\mathsf{translate\_witness}$, and $\mathsf{translate\_circuit}$.
+
+It relies on two subroutines, whose input/output behavior is specified here. Their internal definitions will follow in subsequent sections.
+
+- The function
+  $$
+  \mathsf{constrained} : \mathsf{AbstractCircuit} \times [0, m) \times [0, n) \to \{\mathsf{true}, \mathsf{false}\}
+  $$
+  returns whether a cell $(i, j)$ is constrained — for example, if it lies in a fixed column or participates in a copy, custom, or lookup constraint.
+
+- The function
+  $$
+  \mathsf{ok\_for} : \mathsf{AbstractCircuit} \times \mathsf{Hints} \times \{ R \subseteq [0, n) \} \times ([0, n) \to [0, n'))  \to \{\mathsf{true}, \mathsf{false}\}
+  $$
+  returns whether the partial mapping $\mathbf{r}$ is valid for the set $R$ with respect to the given hints.
+
+---
+
+| $\mathsf{compute\_coord\_map}(C, \mathsf{hints}))$ |
+|-------------------------------------|
+| set $\mathsf{offsets} := \big\{\, e_i : (h_i, e_i) \in \mathsf{hints} \,\big\}$ |
+| set $d':=$ size of $\mathsf{offsets}$ |
+| TODO: This is wrong, we need to eliminate unused columns instead of truncating them. set $m' := \max \big\{\, h_i : (h_i, e_i) \in \mathsf{hints} \,\big\}$ + 1 |
+| set $\mathbf{r} := \{\}$ |
+| set $a' := 0$ |
+| for $g$ from $0$ to $n - 1$: |
+| $\hspace{2em}$ find the minimal $g' \geq a'$ such that $\mathsf{ok\_for}(C, \mathsf{hints}, [0, g],\; \mathbf{r} \cup \{ g \mapsto g' \} ) = \mathsf{true}$ |
+| $\hspace{2em}$ set $\mathbf{r} := \mathbf{r} \cup \{ g \mapsto g' \}$ and $a' := g' + 1$ |
+| set $n' := \max \left\{\, \mathbf{r}(j) + e_i : (i, j) \in [0, m) \times [0, n),\; \mathsf{constrained}(C, i, j) \,\right\} + 1$ |
+| set $\mathsf{coord\_map} \mathrel{\mathop:} [0, m) \times [0, n) \to [0, m') \times [0,n')$ such that $(i, j) \mapsto (h_i,\; \mathbf{r}(j) + e_i)$ |
+| return ($d'$, $\mathsf{offsets}$, $m'$, $n'$, $\mathsf{coord\_map}$)|
+
+---
+
+The algorithm computes:
+- The set $\mathsf{offsets}$ of unique offsets $e_i$ appearing in the hints.
+- The size $d'$ of the $\mathsf{offsets}$
+- The number of concrete columns $m'$ as one more than the maximum $h_i$ appearing in the hints.
+- A strictly increasing function $\mathbf{r} : [0, n) \to [0, n')$ that maps abstract to concrete row indices.
+- The number of concrete rows $n'$ as one more than the maximum $\mathbf{r}(j) + e_i$ across all constrained cells $(i, j)$.
+
+The mapping $\mathsf{coord\_map}$ is then defined by:
+$$
+\mathsf{coord\_map}(i, j) = (h_i,\; \mathbf{r}(j) + e_i)
 $$
 
-Then, for $R \subseteq [0, n)$ and $\mathsf{hints}$ as above, define
-$$
-\begin{array}{rcl}
-\mathsf{ok\_for}(R, \mathbf{r}, \mathsf{hints}) &=& \forall (i, j), (k, \ell) \in ([0, m) \times R) \times ([0, m) \times R) :\\[0.5ex]
-&& \hspace{2em} (\mathsf{constrained}[i, j] \;\Rightarrow\; \mathsf{coord\_map}[i, j] \in [0, m') \times \mathbb{N} \;\;\wedge\; \\[0.3ex]
-&& \hspace{2em} (\mathsf{constrained}[i, j] \;\wedge\; \mathsf{constrained}[k, \ell] \;\wedge\; (i, j) \not\equiv (k, \ell) \;\Rightarrow\; \mathsf{coord\_map}[i, j] \neq \mathsf{coord\_map}[k, \ell]) \\
-\end{array}
-$$
+A greedy strategy is used to construct $\mathbf{r}$ incrementally while maintaining strict monotonicity. At each step, the algorithm selects the smallest $g' \geq a'$ such that extending $\mathbf{r}$ with $g \mapsto g'$ preserves the validity of all previous assignments, as checked by $\mathsf{ok\_for}$.
 
-Then, the overall correctness condition is that $\mathbf{r}$ must be chosen such that $\mathsf{ok\_for}([0, n), \mathbf{r}, \mathsf{hints})$. We claim that this implies the more general definition of correctness preservation for this family of translations.
+**Correctness guarantee.**
+The algorithm always succeeds in finding such a $g'$ at each step. Since there is no upper bound on $g'$, we can always find one large enough to avoid conflicts. Specifically, when assigning $\mathbf{r}(g) = g'$, it suffices to ensure that:
+$$
+(h_i,\; g' + e_i) \neq (h_k,\; \mathbf{r}(\ell) + e_k)
+$$
+for all $\ell < g$ and all $i, k \in [0, m)$ such that both $(i, g)$ and $(k, \ell)$ are constrained. This ensures non-overlapping coordinate assignments for constrained cells.
 
-> Proof sketch [TODO remove handwaving]:
->
-> $\mathcal{I}$ is the identity function and $\mathcal{F}$ is described below. $\mathcal{F}$, $\mathcal{I}$, and $\mathcal{I}^{-1}$ are obviously efficiently computable. Given that the concrete custom constraints and lookups are just the abstract constraints and lookups modified to access the same witness values in their translated locations (and the translation mapping is bijective), preservation of completeness follows immediately. Preservation of knowledge soundness holds because, informally, we can invert the coordinate translation defined by $\mathcal{F}$ to reconstruct all of the abstract witness cells that are needed to satisfy the abstract relation.
+
+### Function $\mathsf{constrained}$ to check if cells are constrained
+
+We now define the function
+$$
+\mathsf{constrained} : \mathsf{AbstractCircuit} \times [0, m) \times [0, n) \to \{ \mathsf{true}, \mathsf{false} \}
+$$
+which was used in the $\mathsf{compute\_coord\_map}$ algorithm to determine whether a given abstract cell $(i, j)$ must be assigned a coordinate in the final layout.
+
+This function returns $\mathsf{true}$ if and only if the cell $w[i, j]$ is involved in any fixed value, equality, custom constraint, or lookup constraint.
+
+---
+
+In the abstract circuit $C \in \mathsf{AbstractCircuit}$, let each custom constraint polynomial $p_u : \mathbb{F}^m \to \mathbb{F}$ be written as
+$$
+p_u(\vec{w}_j) = \sum_{z=0}^{\nu - 1} \sum_{i=0}^{m - 1} \alpha_{u,z,i} \cdot m_{z,i}(\vec{w}_j),
+$$
+and similarly, each lookup constraint polynomial $q_{v,s} : \mathbb{F}^m \to \mathbb{F}$ is written as
+$$
+q_{v,s}(\vec{w}_j) = \sum_{z=0}^{\nu - 1} \sum_{i=0}^{m - 1} \beta_{v, s,z,i} \cdot n_{z,i}(\vec{w}_j),
+$$
+where $m_{z,i}$ and $n_{z,i}$ are monomials in the vector $\vec{w}_j$, and $\alpha_{u,z,i}, \beta_{v,s,z,i} \in \mathbb{F}$ are the corresponding coefficients.
+
+___
+
+| $\mathsf{constrained}(C, i, j )$ |
+|-------------------------------------|
+| check if $i < m_f$ |
+| check if $\exists (k, \ell) \neq (i, j) : (i, j) \equiv (k, \ell)$ |
+| check if $\exists k : S[k] = (i, j)$ |
+| check if $\exists u : j \in \mathsf{CUS}_u$ and $\exists z \in [0, \nu)$  such that $\alpha_{u,z,i} > 0$ |
+| check if $\exists v, s : j \in \mathsf{LOOK}_v$ and $\exists z \in [0, \nu)$ such that $\beta_{v,s,z,i} > 0$ |
+| if any check passes then return $\mathsf{true}$  |
+| else return $\mathsf{false}$|
+
+In other words, a cell $w[i, j]$ is considered constrained if it either contains a fixed value, participates in equality or permutation constraints, or contributes (with nonzero coefficient) to a custom or lookup constraint polynomial applied to column $j$.
+
+
+
+### Function $\mathsf{ok\_for}$ to check if current offsets are OK.
+
+We now define the function
+$$
+\mathsf{ok\_for} : \mathsf{AbstractCircuit} \times \mathsf{Hints} \times \{ R \subseteq [0, n) \} \times ([0, n) \to [0, n'))  \to \{\mathsf{true}, \mathsf{false}\}
+$$
+that returns whether the partial mapping $\mathbf{r}$ is valid for the set $R$ with respect to the given hints.
+
+It relies on the subroutine
+  $$
+  \mathsf{working\_coord\_map} : \mathsf{Hints} \times ([0, n) \to [0, n')) \times [0, m) \times [0, n) \to \mathbb{N} \times \mathbb{N}
+  $$
+that takes as input a set of hints, an offset function $\mathbf{r}, and coordinates $(i,j)$ and behaves as follows
+
+| $\mathsf{working\_coord\_map}(\mathsf{hints}, \mathbf{r}, i, j )$ |
+|-------------------------------------|
+| set $(h_i, e_i) := \mathsf{hints}[i]$ |
+| set $i' := h_i$ |
+| set $j' := \mathbf{r}(j) + e_i$ |
+| return $(i', j')$|
+
+
+
+We now specify $\mathsf{ok\_for}$ that checks that constrained cells have unique coordinates in the concrete circuit.
+
+| $\mathsf{ok\_for}(C, \mathsf{hints}, R,  \mathbf{r},  )$ |
+|-------------------------------------|
+| set $m' := \max \big\{\, h_i : (h_i, e_i) \in \mathsf{hints} \,\big\} + 1$|
+| set $m:=$ the number of hints|
+| for $(i,j) \in [0,m) \times R$ and for $(k, \ell) \in [0,m) \times R$: |
+| $\hspace{2em}$ if $\mathsf{constrained}(C, i, j):$ |
+| $\hspace{4em}$ check $\mathsf{working\_coord\_map}(\mathsf{hints}, \mathbf{r}, i, j) \in [0,m') \times \mathbb{N}$|
+| $\hspace{4em}$ if $\mathsf{constrained}(C, k, \ell)$ and $(i,j) \neq (k, \ell):$|
+| $\hspace{6em}$ check $\mathsf{working\_coord\_map}(\mathsf{hints}, \mathbf{r}, i, j) \neq \mathsf{working\_coord\_map}(\mathsf{hints}, \mathbf{r}, k, \ell)$|
+| return $\mathsf{true}$ if all checks pass|
+| else return $\mathsf{false}$|
+
+We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).  Tesselation between custom constraints is represented by equivalence under $\equiv$.
 
 Discussion: It is alright if one or more *unconstrained* abstract cells map to the same concrete cell as a constrained abstract cell, because that will not affect the meaning of the circuit. Notice that specifying $\equiv$ as an equivalence relation helps to simplify this definition (as compared to specifying it as a set of copy constraints), because an equivalence relation is by definition symmetric, reflexive, and transitive.
 
-Recall from the [relation definition](relation.md#copy-constraints) that fixed abstract cells with the same value are considered to be equivalent under $\equiv$. This allows a fixed column to be specified as a rotation of another fixed column, which can be useful to reduce the number of fixed concrete columns used by the concrete circuit.
 
-Since correctness does not depend on the specific hints provided by the circuit programmer, it is also valid to use any subset of the provided hints, or to infer hints that were not provided.
+
+## Translating the circuits
+
+We adopt the convention that indexing outside $w'$ results in an undefined value (i.e. the adversary could choose it).  Tesselation between custom constraints is represented by equivalence under $\equiv$.
+
+A translation from an abstract to a concrete circuit takes the following inputs:
+
+| Translation input  | Description |
+| ------------------ | -------- |
+| input circuit      | The abstract circuit, excluding the instance vector $\phi$. |
+| offset hints       | $\big[\, (h_i, e_i) \mathrel{⦂} [0,m') \times \mathbb{Z} \,:\, i \leftarrow 0 \text{..} m \,\big]$ provided by the circuit designer. |
+
+And produces:
+
+| Translation output | Description |
+| ------------------ | -------- |
+| output circuit     | A version of the input circuit that supports assigning polynomials to cells on offset rows. |
+
+
+In our model:
+
+* The abstract witness matrix $w$ has $m$ abstract columns.
+* The concrete witness matrix $w'$ has $m'$ columns, of which the first $m'_f$ are fixed.
+
 
 ### Witness translations
 
@@ -151,23 +523,21 @@ $$
 j' \in \mathsf{LOOK}'_v \Rightarrow \big[\, q_{v,s}\!\left(\big[\,w'[h_i, j' + e_i] : i \leftarrow 0 \text{..} m \,\big]\right) : s \leftarrow 0 \text{..} L_v \,\big] \in \mathsf{TAB}_v
 $$
 
-### Algorithm $\mathsf{FIND\_ROW\_MAPPING}$: Greedy algorithm for choosing $\mathbf{r}$
 
-There is a greedy algorithm for deterministically choosing $\mathbf{r}$ that maintains ordering of rows (i.e. $\mathbf{r}$ is strictly increasing), and simply inserts a gap in the row mapping whenever the above constraint would not be met for all rows so far.
-
-| Algorithm for choosing $\mathbf{r}$ |
-|----|
-| set $\mathbf{r} := \{\}$ |
-| set $a' := 0$ |
-| for $g$ from $0$ up to $n-1$: |
-| $\hspace{2em}$ find the minimal $g' \geq a'$ such that $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ |
-| $\hspace{2em}$ set $\mathbf{r} := \mathbf{r} \cup \{g \mapsto g'\}$ and $a' := g'+1$ |
-
-The number of concrete rows is then given by $n' = \max \big\{\, \mathbf{r}(j) + e_i : (i, j) \in ([0, m) \times [0, n)) \;\wedge\; \mathsf{constrained}(i, j) \,\big\} + 1$. The number of concrete columns $m'$ is implied by the type of $\mathsf{hints}$.
-
-Note that for each step it is always possible to find a suitable $g'$: there is no upper bound on $g'$, and so we can always choose it large enough that any additional conditions of $\mathsf{ok\_for}([0, g], \mathbf{r} \cup \{g \mapsto g'\}, \mathsf{hints})$ relative to $\mathsf{ok\_for}([0, g-1], \mathbf{r}, \mathsf{hints})$ hold. Specifically: by symmetry it is sufficient to consider the additional conditions for which $j = g$ and $\ell < g$. There must be some $g' = \mathbf{r}(j)$ such that $(h_i, g' + e_i)$ does not overlap with $(h_k, \mathbf{r}(\ell) + e_k)$ for any $i, k \in [0, m)$ and $\ell \in [0, g-1]$.
 
 ### Security proofs
+
+
+Recall from the [relation definition](relation.md#copy-constraints) that fixed abstract cells with the same value are considered to be equivalent under $\equiv$. This allows a fixed column to be specified as a rotation of another fixed column, which can be useful to reduce the number of fixed concrete columns used by the concrete circuit.
+
+Since correctness does not depend on the specific hints provided by the circuit programmer, it is also valid to use any subset of the provided hints, or to infer hints that were not provided.
+
+
+* **Fixed-column consistency**: $i < m_f \Rightarrow h_i < m'_f$, i.e. the concrete circuit follows the same rule as the abstract circuit that fixed columns are on the left.
+* **Semantics preservation**:  The hints do not affect the meaning of a circuit, i.e., the set of public inputs for which it is satisfiable, and the knowledge required to find a witness.
+  <span style="color:red">Mary:  This is not concrete??? </span>
+
+
 
 #### $\mathsf{FIND\_ROW\_MAPPING}$ gives a correctness-preserving translation
 
