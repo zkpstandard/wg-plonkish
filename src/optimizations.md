@@ -73,7 +73,7 @@ Some coordinates of $\vec{w}_j$ may involve out-of-bounds accesses to $w$, since
 
 Given the above definitions, the relation $\cR_\concrete$ corresponds to a set of $\,(\!$ instance $\!,\,$ witness $\!)\,$ pairs
 $$
- \left(x = \left(\F, C = \left(d, \offsets, t, n, m, \equiv, S, m_f, f, \vecof{(p_u, \CUS_{u}) \where u}, \vecof{(L_v, \TAB_v, \vecof{q_{v,s} \where s}, \LOOK_v) \where v}, ϕ\right),\, w \right)
+ \left(x = \left(\F, C = \left(d, \offsets, t, n, m, \equiv, S, m_f, f, \vecof{(p_u, \CUS_{u}) \where u}, \vecof{(L_v, \TAB_v, \vecof{q_{v,s} \where s}, \LOOK_v) \where v}\right), ϕ\right),\, w \right)
 $$
 such that:
 $$
@@ -86,7 +86,7 @@ $$
 \end{array}
 $$
 
-In this model, a circuit-specific relation $cR_{\F, C}$ for a field $\F$ and circuit $C$ is the relation $cR_\plonkish$ restricted to $\{ ((\F, C, ϕ \typecolon \F^{[C.t]}), w \typecolon \F^{[C.m \times C.n]}) \}$.
+In this model, a circuit-specific relation $\cR_{\F, C}$ for a field $\F$ and circuit $C$ is the relation $\cR_\plonkish$ restricted to $\{ ((\F, C, ϕ \typecolon \F^{[C.t]}), w \typecolon \F^{[C.m \times C.n]}) \}$.
 
 ### Conditions satisfied by statements in $\cR_\plonkish$
 
@@ -290,15 +290,15 @@ $
 
 The function
 $$
-\computecoordmap
+\computecoordmap \typecolon \AbstractCircuit \times \Hints \to \N \times \Z^{[d]} \times \N \times \N \times \N \times ([m] \times [n] \to [m'] \times [n'])
 $$
 takes as input an abstract circuit and a set of designer-provided hints $(C, \hints) \in \AbstractCircuit \times \Hints$.  The domain of abstract circuits, $\AbstractCircuit$, is defined formally in the description of the relation $\cR_\plonkish$.  The domain of offset hints, $\Hints$, is defined in the following section.
 
 It returns $(d', \offsets', m', m_f', n', \coordmap)$ such that :
 - $d' \in \N$ is the number of offsets
-- $\offsets' \in \Z^{d}$ are the offsets
+- $\offsets' \in \Z^{[d]}$ are the offsets
 - $m' \in \N$ is the number of concrete columns,
-- $m_f' \leq m'$ is the number of concrete columns that are fixed,
+- $m_f' \in \N \where m_f' \leq m'$ is the number of concrete columns that are fixed,
 - $n' \in \N$ is the number of concrete rows,
 - the coordinate mapping function
   $$
@@ -345,13 +345,13 @@ It relies on two subroutines, whose input/output behavior is specified here. The
 
 - The function
   $$
-  \constrained \typecolon \AbstractCircuit \times [m] \times [n] \to \setof{\false, \true\}
+  \constrained \typecolon \AbstractCircuit \times [m] \times [n] \to \setof{\false, \true}
   $$
   returns whether a cell $(i, j)$ is constrained — for example, if it lies in a fixed column or participates in a copy, custom, or lookup constraint.
 
 - The function
   $$
-  \okfor \typecolon \AbstractCircuit \times \Hints \times \setof{ R \subseteq [0, n) } \times ([n] \to [n']) \to \setof{\false, \true\}
+  \okfor \typecolon \AbstractCircuit \times \Hints \times \setof{ R \subseteq [0, n) } \times ([n] \to [n']) \to \setof{\false, \true}
   $$
   returns whether the partial mapping $\mathbf{r}$ is valid for the set $R$ with respect to the given hints.
 
@@ -582,7 +582,7 @@ This completely specifies $\cF$, and furthermore shows that $\cF$ is efficiently
 Note that $\mathsf{inv\_coord\_map}$ is well-defined because $\mathsf{FIND\_ROW\_MAPPING}$ ensures by construction that $\okfor([n], \mathbf{r}, \hints)$ holds, where
 $$
 \begin{array}{rcl}
-\okfor(R, \mathbf{r}, \hints) &=& \forall \forall i, k \typecolon [m],\, j, \ell \in R :\\[0.5ex]
+\okfor(R, \mathbf{r}, \hints) &=& \forall i, k \typecolon [m],\, j, \ell \in R :\\[0.5ex]
 && \hspace{2em} (\constrained[i, j] \;\implies\; \coordmap[i, j] \in [m'] \times \N \;\and \\[0.3ex]
 && \hspace{2em} (\constrained[i, j] \and \constrained[k, \ell] \and (i, j) \not\equiv (k, \ell) \;\implies\; \coordmap[i, j] \neq \coordmap[k, \ell]) \\
 \end{array}
@@ -603,9 +603,9 @@ $$
 \begin{array}{ll|l}
    w \typecolon \F^{[m \times n]}, \ f \typecolon \F^{[m_f \times n]} & & i \in [m_f], \ j \in [n] \implies w[i, j] = f[i, j] \\[0.3ex]
    S \typecolon ([m] \times [n])^t, \ ϕ \typecolon \F^{[t]} & & k \in [t] \implies w[S[k]] = ϕ[k] \\[0.3ex]
-   \equiv\; \subseteq ([m] \times [n]) \times ([m] \times [n]) & & (i,j) \equiv (k,\ell) \implies w[i, j] = w[k, \ell] \\[0.3ex]
-   \CUS_u \subseteq [n], \ p_u \typecolon \F^m \to \F & & j \in \CUS_u \implies p_u(\vec{w}_j) = 0 \\[0.3ex]
-   \LOOK_v \subseteq [n], \ q_{v,s} \typecolon \F^m \to \F, \ \TAB_v \subseteq \F^{L_v} & & j \in \LOOK_v \implies \vecof{q_{v,s}(\vec{w}_j) \where s \gets \range{0}{L_v}} \in \TAB_v
+   \equiv\; \typecolon \Equiv{[m] \times [n]} & & (i,j) \equiv (k,\ell) \implies w[i, j] = w[k, \ell] \\[0.3ex]
+   \CUS_u \typecolon \Set{[n]}, \ p_u \typecolon \F^m \to \F & & j \in \CUS_u \implies p_u(\vec{w}_j) = 0 \\[0.3ex]
+   \LOOK_v \typecolon \Set{[n]}, \ q_{v,s} \typecolon \F^m \to \F, \ \TAB_v \typecolon \Set{\F^{L_v}} & & j \in \LOOK_v \implies \vecof{q_{v,s}(\vec{w}_j) \where s \gets \range{0}{L_v}} \in \TAB_v
 \end{array}
 $$
 
@@ -614,9 +614,9 @@ $$
 \begin{array}{ll|l}
    w' \typecolon \F^{[m' \times n']}, \ f' \typecolon \F^{m'_f \times n'} & & i' \in [m'_f], \ j' \in [n'] \implies w'[i', j'] = f[i', j'] \\[0.3ex]
    S' \typecolon ([m'] \times [n'])^t, \ ϕ \typecolon \F^{[t]} & & k \in [t] \implies w'[S'[k]] = ϕ[k] \\[0.3ex]
-   \equiv'\; \subseteq ([m'] \times [n']) \times ([m'] \times [n']) & & (i',j') \equiv (k',\ell') \implies w'[i', j'] = w'[k', \ell'] \\[0.3ex]
-   \CUS'_u \subseteq [n'], \ p'_u \typecolon \F^{m'} \to \F & & j' \in \CUS'_u \implies p'_u(\vec{w}'_{j'}) = 0 \\[0.3ex]
-   \LOOK'_v \subseteq [n'], \ q'_{v,s} \typecolon \F^{m'} \to \F, \ \TAB_v \subseteq \F^{L_v} & & j' \in \LOOK'_v \implies \vecof{q'_{v,s}(\vec{w}'_{j'}) \where s \gets \range{0}{L_v}} \in \TAB_v
+   \equiv'\; \typecolon \Equiv{[m'] \times [n']} & & (i',j') \equiv (k',\ell') \implies w'[i', j'] = w'[k', \ell'] \\[0.3ex]
+   \CUS'_u \typecolon \Set{[n']}, \ p'_u \typecolon \F^{m'} \to \F & & j' \in \CUS'_u \implies p'_u(\vec{w}'_{j'}) = 0 \\[0.3ex]
+   \LOOK'_v \typecolon \Set{[n']}, \ q'_{v,s} \typecolon \F^{m'} \to \F, \ \TAB_v \typecolon \Set{\F^{L_v}} & & j' \in \LOOK'_v \implies \vecof{q'_{v,s}(\vec{w}'_{j'}) \where s \gets \range{0}{L_v}} \in \TAB_v
 \end{array}
 $$
 
@@ -625,7 +625,7 @@ For condition 2, the abstract witness $w$ that we find will be $\cF'(x')$. Since
 Given the definitions from [above](#constraint-translations), it is straightforward to see [FIXME] that in the statements to be proven for both conditions:
 
 * the concrete fixed constraints for concrete fixed cells $(i',j')$ are in one-to-one correspondence with equivalent abstract fixed constraints for abstract cells $(i,j)$;
-* the concrete input constraints for concrete cells $S'[k]$$ for $k \typecolon [t]$ are in one-to-one correspondence with equivalent abstract input constraints for abstract cells $S[k]$ for $k \typecolon [t]$;
+* the concrete input constraints for concrete cells $S'[k]$ for $k \typecolon [t]$ are in one-to-one correspondence with equivalent abstract input constraints for abstract cells $S[k]$ for $k \typecolon [t]$;
 * the concrete equality constraints for concrete cells $(i',j') \equiv' (k',\ell')$ are in one-to-one correspondence with equivalent abstract equality constraints for abstract cells $(i,j) \equiv (k,\ell)$;
 * the concrete custom constraints for concrete rows $j' \in \CUS'_u$, are in one-to-one correspondence with equivalent abstract custom constraints for abstract rows $j \in \CUS_u$;
 * the concrete lookup constraints for concrete rows $j' \in \LOOK'_v$, are in one-to-one correspondence with equivalent abstract lookup constraints for abstract rows $j \in \LOOK_v$.

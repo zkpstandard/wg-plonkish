@@ -167,7 +167,7 @@ Here $p_u \typecolon \F^{[m]} \to \F$ is an arbitrary [multivariate polynomial](
 >
 > $$P\!\left(\vecof{X_b \where b \gets \range{0}{\eta}}\right) = \sum_{z \stypecolon [\nu]} \Big(c_z \cdot \prod_{b \stypecolon [\eta]} X_b^{\alpha_{z,b}}\Big)$$
 >
-> where $c_z \typecolon \F\comma$ $c_z \neq 0\comma$ and $\nu$ and $\alpha_{z,b}$ are positive integers.
+> where $\nu \typecolon \N$, $c_z \typecolon \F \where c_z \neq 0$, and $\alpha_{z,b} \typecolon \N^+$.
 
 #### Lookup constraints
 
