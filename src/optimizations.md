@@ -42,7 +42,7 @@ The circuit $C \typecolon \ConcreteCircuit_{\F}$ in turn has the following form:
 |    $✨\;\offsets$ | $\oftype \Set{\Z}$                 | Set of offsets of size $d$ enabling optimizations on the circuit structure.                          | [Custom constraints](#custom-constraints), [Lookup constraints](#lookup-constraints) |
 |               $t$ | $\oftype \N$                       | Length of the instance vector.                                                                       |                                           |
 |               $n$ | $\oftype \N \where n > 0$          | Number of rows for the witness matrix.                                                               |                                           |
-|               $m$ | $\oftype \N \where m > 0$          | Number of columns for the witness matrix.                                                            |                                           |
+|               $m$ | $\oftype \N^+$          | Number of columns for the witness matrix.                                                            |                                           |
 |          $\equiv$ | $\oftype \Equiv{[m] \times [n]}$   | An equivalence relation indicating which witness entries must be equal to each other.                | [Copy constraints](#copy-constraints)     |
 |               $S$ | $\oftype ([m] \times [n])^{[t]}$   | A vector indicating which witness entries are equal to instance vector entries.                      | [Copy constraints](#copy-constraints)     |
 |             $m_f$ | $\oftype \N \where m_f ≤ m$        | Number of columns that are fixed.                                                                    | [Fixed constraints](#fixed-constraints)   |
@@ -64,7 +64,7 @@ The relation $\cR_\concrete$ takes witnesses of the following form:
 | -----------------:|:----------------------------------------- |:------------------- |
 | $\hspace{3.2em}w$ | $\oftype \F^{[m \times n]}\hspace{4.3em}$ | The witness matrix. |
 
-✨ Define $\vec{w}_{j} \in \F^{m \cdot d}$ as the row vector
+✨ Define $\vec{w}_{j} \in \F^{[m \cdot d]}$ as the row vector
 $\vec{w}_{j} := \vecof{w[i, j + \offset] \where (i, \offset) \gets [m] \times \offsets}$.
 
 Some coordinates of $\vec{w}_j$ may involve out-of-bounds accesses to $w$, since $j$ ranges up to $n$ and $\offsets$ may include nonzero values. It is an error if a concrete circuit involves such accesses for *enabled* source rows of custom or lookup constraints — that is, if $j \in \CUS_u$ for any $u$ or $j \in \LOOK_v$ for any $v$.
@@ -290,16 +290,16 @@ $
 
 The function
 $$
-\computecoordmap \typecolon \AbstractCircuit \times \Hints \to \N \times \Z^{[d]} \times \N \times \N \times \N \times ([m] \times [n] \to [m'] \times [n'])
+\computecoordmap \typecolon \AbstractCircuit \times \Hints \to \N \times \Z^{[d]} \times \N^+ \times \N \times \N^+ \times ([m] \times [n] \to [m'] \times [n'])
 $$
 takes as input an abstract circuit and a set of designer-provided hints $(C, \hints) \in \AbstractCircuit \times \Hints$.  The domain of abstract circuits, $\AbstractCircuit$, is defined formally in the description of the relation $\cR_\plonkish$.  The domain of offset hints, $\Hints$, is defined in the following section.
 
 It returns $(d', \offsets', m', m_f', n', \coordmap)$ such that :
 - $d' \in \N$ is the number of offsets
 - $\offsets' \in \Z^{[d]}$ are the offsets
-- $m' \in \N$ is the number of concrete columns,
+- $m' \in \N^+$ is the number of concrete columns,
 - $m_f' \in \N \where m_f' \leq m'$ is the number of concrete columns that are fixed,
-- $n' \in \N$ is the number of concrete rows,
+- $n' \in \N^+$ is the number of concrete rows,
 - the coordinate mapping function
   $$
   \coordmap \typecolon [m] \times [n] \to [m'] \times [n']
@@ -316,7 +316,7 @@ The domain $\Hints$ represents collections of designer-provided **offset hints**
 
 Each hint assigns to a column index $i \in [m]$:
 
-- a target column hint $h_i \in [m]$, and
+- a target column hint $h_i \in [m']$, and
 - a row offset expression $e_i \in \Z$,
 
 where for each column $i$ mapped to $h_i$, either $i$ and $h_i$ are both fixed abstract column indices $\in [m_f]$ or they are both non-fixed abstract column indices $\in [m_f, m)$.
@@ -327,12 +327,12 @@ $$
 $$
 that is, the set of length-$m$ sequences
 $$
-\hints \typecolon [m] \to [m] \times \Z
+\hints \typecolon [m] \to [m'] \times \Z
 $$
 where each entry $\hints[i]$ specifies a row hint and an offset for index $i$.
 
 Thus, $\hints[i] = (h_i, e_i)$ specifies:
-- $h_i \in [m]$: a column hint, representing a target column index
+- $h_i \in [m']$: a column hint, representing a target column index
 - $e_i \in \Z$: a row offset expression (e.g., a symbolic shift)
 
 These hints guide the construction of the final coordinate map by specifying where (in columns) abstract elements prefer to appear and how to offset their placement in rows.
