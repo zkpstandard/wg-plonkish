@@ -77,7 +77,7 @@ The circuit $C \typecolon \AbstractCircuit_{\F}$ in turn has the following form:
 |  $\sf{Circuit}$ | $\bs\sf{element}$                  | Description                                                                                          | Used in                                   |
 | ---------------:|:---------------------------------- |:---------------------------------------------------------------------------------------------------- |:----------------------------------------- |
 |             $t$ | $\oftype \N$                       | Length of the instance vector.                                                                       |                                           |
-|             $n$ | $\oftype \N \where n > 0$          | Number of rows for the witness matrix.                                                               |                                           |
+|             $n$ | $\oftype \N^+$          | Number of rows for the witness matrix.                                                               |                                           |
 |             $m$ | $\oftype \N \where m > 0$          | Number of columns for the witness matrix.                                                            |                                           |
 |        $\equiv$ | $\oftype \Equiv{[m] \times [n]}$   | An equivalence relation indicating which witness entries must be equal to each other.                | [Copy constraints](#copy-constraints)     |
 |             $S$ | $\oftype ([m] \times [n])^{[t]}$   | A vector indicating which witness entries are equal to instance vector entries.                      | [Copy constraints](#copy-constraints)     |
