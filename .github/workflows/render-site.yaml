@@ -24,7 +24,7 @@ jobs:
         tool: mdbook-katex@0.6.0
 
     # Now get the user content:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     # Now render to the site:
 
