@@ -11,6 +11,7 @@ authors = [
     "Jack Grigg <thestr4d@gmail.com>",
     "Daira Emma Hopwood <daira@jacaranda.org>",
     "Mary Maller <mary.maller@ethereum.org>",
+    "Constance Beguier <constance@qed-it.com>",
 ]
 edition = "2021"
 license = "MIT OR Apache-2.0 OR CC-BY-4.0"

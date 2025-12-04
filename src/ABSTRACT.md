@@ -4,6 +4,7 @@
 - Jack Grigg, Electric Coin Company
 - Daira-Emma Hopwood, Jacaranda Software
 - Mary Maller, Ethereum Foundation and PQShield (liaison)
+- Constance Beguier, Qedit
 
 *Public Contact:* plonkish-team@googlegroups.com
 

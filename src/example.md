@@ -45,7 +45,7 @@ We will model the Luhn algorithm in a Plonk constraint system. For simplicity, w
 
 ### Instance elements
 
-We work over the prime field $\mathbb{F}_{101}$ (which ensures that $s$ can be represented without overflow).
+We work over the prime field $\F_{101}$ (which ensures that $s$ can be represented without overflow).
 
 We have a single instance value ($t=1$): the check digit.
 

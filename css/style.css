@@ -4,5 +4,9 @@ table {
 }
 
 table tbody tr {
-    background: var(--table-alternate-bg);
+  background: var(--table-alternate-bg);
+}
+
+:root {
+  --content-max-width: 80%;
 }
