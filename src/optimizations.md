@@ -323,7 +323,7 @@ where for each column $i$ mapped to $h_i$, either $i$ and $h_i$ are both fixed a
 
 We define:
 $$
-\Hints = \left\{ i \mapsto (h_i \typecolon [m], e_i \typecolon \Z) \where (i < m_f \and h_i < m_f) \or (i \geq m_f \and h_i \geq m_f) \right\}
+\Hints = \left\{ i \mapsto (h_i \typecolon [m], e_i \typecolon \Z) \where (i < m_f \and h_i < m'_f) \or (i \geq m_f \and h_i \geq m'_f) \right\}
 $$
 that is, the set of length-$m$ sequences
 $$
