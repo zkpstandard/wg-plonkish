@@ -240,7 +240,7 @@ translates abstract Plonkish circuits to concrete Plonkish circuits.
 
 Given $C \typecolon \AbstractCircuit$ and $\hints \typecolon \Hints$,
 $$
-\translatecircuit(C, \hints) = C' = \left(d', \offsets, t', n', m', \equiv, S, m_{f}', f', \vecof{(p_u, \CUS_{u}) \where u}, \vecof{(L_v, \TAB_v, \vecof{q_{v,s} \where s}, \LOOK_v) \where v}\right)
+\translatecircuit(C, \hints) = C' = \left(d', \offsets, t', n', m', \equiv, S, m_{f}', f', \vecof{(p_u, \CUS'_{u}) \where u}, \vecof{(L'_v, \TAB_v, \vecof{q'_{v,s} \where s}, \LOOK'_v) \where v}\right)
 $$
 where:
 1) $(d', \offsets, m', n', \coordmap) := \computecoordmap(C, \hints)$
@@ -249,7 +249,7 @@ where:
 4) $S$
 5) $m'_f$
 6) $f'$
-7) $p_u'$ $
+7) $
 j' \in \CUS'_u \implies p_u\!\left(\vecof{w'[h_i, j' + e_i] \where i \gets \range{0}{m}}\right) = 0
 $
 8) $\CUS_u' :=  \setof{\mathbf{r}(j) \where j \in \CUS_u}$
@@ -323,7 +323,7 @@ where for each column $i$ mapped to $h_i$, either $i$ and $h_i$ are both fixed a
 
 We define:
 $$
-\Hints = \left\{ i \mapsto (h_i \typecolon [m], e_i \typecolon \Z) \where (i < m_f \and h_i < m_f) \or (i \geq m_f \and h_i \geq m_f) \right\}
+\Hints = \left\{ i \mapsto (h_i \typecolon [m], e_i \typecolon \Z) \where (i < m_f \and h_i < m'_f) \or (i \geq m_f \and h_i \geq m'_f) \right\}
 $$
 that is, the set of length-$m$ sequences
 $$
@@ -353,7 +353,8 @@ It relies on two subroutines, whose input/output behavior is specified here. The
   $$
   \okfor \typecolon \AbstractCircuit \times \Hints \times \setof{ R \subseteq [0, n) } \times ([n] \to [n']) \to \setof{\false, \true}
   $$
-  returns whether the partial mapping $\mathbf{r}$ is valid for the set $R$ with respect to the given hints.
+  returns whether the partial mapping $\mathbf{r}$ is valid for the set $R$ with respect to the given hints
+  (see [here](#function-ok_for-to-check-if-current-offsets-are-ok) for the full definition of the function $\okfor$).
 
 ---
 
