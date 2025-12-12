@@ -249,7 +249,7 @@ where:
 4) $S$
 5) $m'_f$
 6) $f'$
-7) $p_u'$ $
+7) $
 j' \in \CUS'_u \implies p_u\!\left(\vecof{w'[h_i, j' + e_i] \where i \gets \range{0}{m}}\right) = 0
 $
 8) $\CUS_u' :=  \setof{\mathbf{r}(j) \where j \in \CUS_u}$
