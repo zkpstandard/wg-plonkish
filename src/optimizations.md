@@ -353,7 +353,8 @@ It relies on two subroutines, whose input/output behavior is specified here. The
   $$
   \okfor \typecolon \AbstractCircuit \times \Hints \times \setof{ R \subseteq [0, n) } \times ([n] \to [n']) \to \setof{\false, \true}
   $$
-  returns whether the partial mapping $\mathbf{r}$ is valid for the set $R$ with respect to the given hints.
+  returns whether the partial mapping $\mathbf{r}$ is valid for the set $R$ with respect to the given hints
+  (see [here](#function-ok_for-to-check-if-current-offsets-are-ok) for the full definition of the function $\okfor$).
 
 ---
 
