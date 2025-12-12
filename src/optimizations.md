@@ -240,7 +240,7 @@ translates abstract Plonkish circuits to concrete Plonkish circuits.
 
 Given $C \typecolon \AbstractCircuit$ and $\hints \typecolon \Hints$,
 $$
-\translatecircuit(C, \hints) = C' = \left(d', \offsets, t', n', m', \equiv, S, m_{f}', f', \vecof{(p_u, \CUS_{u}) \where u}, \vecof{(L_v, \TAB_v, \vecof{q_{v,s} \where s}, \LOOK_v) \where v}\right)
+\translatecircuit(C, \hints) = C' = \left(d', \offsets, t', n', m', \equiv, S, m_{f}', f', \vecof{(p_u, \CUS'_{u}) \where u}, \vecof{(L'_v, \TAB_v, \vecof{q'_{v,s} \where s}, \LOOK'_v) \where v}\right)
 $$
 where:
 1) $(d', \offsets, m', n', \coordmap) := \computecoordmap(C, \hints)$
