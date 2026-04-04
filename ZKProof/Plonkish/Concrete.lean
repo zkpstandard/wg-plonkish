@@ -74,77 +74,38 @@ variable {F : Type} [Field F]
 namespace ConcreteCircuit
 variable (C : ConcreteCircuit F)
 
-/-- The type of column indices for a `ConcreteCircuit`. -/
 public abbrev Col := C.G.Col
-
-/-- The type of row indices for a `ConcreteCircuit`. -/
 public abbrev Row := C.G.Row
-
-/-- The type of input indices for a `ConcreteCircuit`. -/
 public abbrev Input := C.G.Input
-
-/-- The witness entry type for a `ConcreteCircuit`. -/
 public abbrev Entry := C.G.Entry
-
-/-- The set of fixed locations. -/
 public abbrev FixedEntry := C.G.FixedEntry
-
-/-- The instance type for a `ConcreteCircuit`. -/
 public abbrev Instance := Vector F C.G.t
-
-/-- The witness type for a `ConcreteCircuit`. -/
 public abbrev Witness := C.Entry → F
-
-/-- The relation type for a `ConcreteCircuit`. -/
 public abbrev Relation := Rel C.Instance C.Witness
-
-/-- The type of extended polynomial variables: (column, offset index). -/
 public abbrev ExtVar := C.Col × Fin C.d
-
-/-- The type of polynomials over extended row vectors. -/
 public abbrev ExtPoly := MvPolynomial C.ExtVar F
 
-/-- A proof that row `j` with offset `offsets[k]` is in bounds. -/
 public abbrev OffsetInBounds (j : C.Row) (k : Fin C.d) : Prop :=
   0 ≤ (j.val : ℤ) + C.offsets[k] ∧ (j.val : ℤ) + C.offsets[k] < ((C.G.n : ℕ) : ℤ)
 
-/-- Given a well-formedness proof that row `j` with offset `offsets[k]` is in bounds,
-    compute the offset row index as a valid `Fin n`. -/
 public def offsetRow (j : C.Row) (k : Fin C.d) (h : C.OffsetInBounds j k) : C.Row :=
   ⟨((j.val : ℤ) + C.offsets[k]).toNat, by omega⟩
 
-/-- The extended row vector for a witness `w` at row `j`, given that all
-    offset accesses are in bounds.  Maps `(i, k) : Col × Fin d` to
-    `w[i, j + offsets[k]]`. -/
 public def ext_row_vec (w : C.Witness) (j : C.Row)
     (hj : ∀ k : Fin C.d, C.OffsetInBounds j k) : C.ExtVar → F :=
   fun (i, k) => w { i := i, j := C.offsetRow j k (hj k) }
 
-/-- Evaluate a polynomial on the extended row vector for a given row. -/
 public def ext_row_eval (w : C.Witness) (j : C.Row)
     (hj : ∀ k : Fin C.d, C.OffsetInBounds j k) (poly : C.ExtPoly) : F :=
   poly.eval (C.ext_row_vec w j hj)
 
-/--
-The relation for a concrete Plonkish circuit with instance vector `φ`.
-Mirrors `AbstractCircuit.R_parts`, but custom and lookup constraints use the
-extended row vector with offsets.
--/
 public structure R_parts (φ : C.Instance) (w : C.Witness) where
-  /-- Semantics of fixed constraints. -/
   fixed (e : C.FixedEntry) : w e = C.f e
-
-  /-- Semantics of copy constraints for instance entries. -/
   input (k : C.Input) : w C.S[k] = φ[k]
-  /-- Semantics of copy constraints for witness entries. -/
   equal (e e' : C.Entry) (equated : C.E e e') : w e = w e'
-
-  /-- Semantics of custom constraints with offsets. -/
   custom (u : Fin C.U) (j : C.CUS u) :
     C.ext_row_eval w j (C.wf_CUS u j j.property) (C.p u) = 0 :=
     by intro u; exact Fin.elim0 u
-
-  /-- Semantics of lookup constraints with offsets. -/
   lookup (v : Fin C.V) (j : C.LOOK v) :
     (C.q v).map (C.ext_row_eval w j (C.wf_LOOK v j j.property)) ∈ C.TAB v :=
     by intro v; exact Fin.elim0 v
